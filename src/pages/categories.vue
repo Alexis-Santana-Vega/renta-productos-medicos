@@ -4,7 +4,7 @@
             <v-row dense>
                 <v-col cols="12" sm="12" md="6" lg="8" xl="9">
                     <iterator-header>
-                        <btn-custom prepend-icon="mdi-plus" @click="openDialogForm()">Agregar Categoría</btn-custom>
+                        <btn-custom prepend-icon="mdi-plus" :block="$isMobile()" @click="openDialogForm()">Agregar Categoría</btn-custom>
                     </iterator-header>
                 </v-col>
                 <v-col cols="12" sm="12" md="6" lg="4" xl="3">

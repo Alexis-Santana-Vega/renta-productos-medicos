@@ -46,5 +46,18 @@ export default {
                 reverseButtons: true,
             })
         }
+
+        app.config.globalProperties.$productStatusColor = (status) => {
+            switch(status) {
+                case 'DISPONIBLE': return 'success'
+                case 'OCUPADO': return 'warning'
+                case 'SUSPENDIDO': return 'error'
+                default: return 'primary'
+            }
+        }
+
+        app.config.globalProperties.$productStatus = [
+            'DISPONIBLE', 'OCUPADO', 'SUSPENDIDO'
+        ]
     }
 }

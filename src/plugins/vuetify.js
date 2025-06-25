@@ -97,6 +97,9 @@ export default createVuetify({
     VContainer: {
       fluid: false,
     },
+    VList: {
+      slim: true,
+    },
     /* Defaults for feedback */
     VTabs: {
       color: 'primary',

@@ -20,5 +20,8 @@ declare module 'vue' {
     LoadingOverlay: typeof import('./src/components/dashboard/loading-overlay.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SummaryCardOne: typeof import('./src/components/summary/summary-card-one.vue')['default']
+    SummaryCardThree: typeof import('./src/components/summary/summary-card-three.vue')['default']
+    SummaryCardTwo: typeof import('./src/components/summary/summary-card-two.vue')['default']
   }
 }
