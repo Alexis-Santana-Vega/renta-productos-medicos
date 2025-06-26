@@ -118,7 +118,7 @@ export default {
       { title: "Categorías", icon: "mdi-tag-outline", href: "/categories" },
       { title: "Ayuda", icon: "mdi-help-circle-outline", href: "/help" },
       { title: "Acerca de", icon: "mdi-information-variant", href: "/about" },
-      { title: "Administradores", icon: "mdi-account-cog-outline", href: "/admins" },
+      { title: "Usuarios", icon: "mdi-account-cog-outline", href: "/users" },
     ],
     cartItems: [
       { id: '10', name: 'Phoroptor Yeosn SLY-100', photoUrl: 'https://isem.mx/wp-content/uploads/2019/11/phoroptorpartetrasera.jpg', price: 3000.0, stock: 1 },
