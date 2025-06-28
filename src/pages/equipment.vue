@@ -79,51 +79,55 @@
                 :disabled="controls.loadingProduct" @close="closeDialogProduct()" actions fullscreen>
                 <v-row>
                     <v-col cols="12">
-                        <card-form title="Información General">
+                        <card-form title="Información General" icon="mdi-card-text-outline">
                             <v-row dense>
                                 <v-col cols="12" sm="12" md="4" lg="3" xl="3">
                                     <v-text-field v-model="products.editedItem.barcode" label="Código de Barras *"
-                                        :color="colorDialog" :rules="formRules.barcode"
+                                        :color="colorDialog" :rules="formRules.barcode" prepend-inner-icon="mdi-identifier"
                                         append-inner-icon="mdi-barcode-scan"
                                         @click:append-inner="console.log('Sacando el Scanner')"></v-text-field>
                                 </v-col>
-                                <v-col cols="12" sm="12" md="8" lg="9" xl="9">
+                                <v-col cols="12" sm="12" md="8" lg="3" xl="3">
+                                    <v-select v-model="products.editedItem.categoryId" label="Categoría *" :color="colorDialog" prepend-inner-icon="mdi-tag-multiple-outline"
+                                    :rules="formRules.categoryId" :items="categories" item-value="id" item-title="name"></v-select>
+                                </v-col>
+                                <v-col cols="12" sm="12" md="8" lg="6" xl="6">
                                     <v-text-field v-model="products.editedItem.name" label="Nombre Equipo *"
                                         :color="colorDialog" :rules="formRules.name"></v-text-field>
                                 </v-col>
                                 <v-col cols="12" sm="12" md="12" lg="12" xl="12">
                                     <v-text-field v-model="products.editedItem.shortDescription"
-                                        label="Descripción Corta *" :color="colorDialog"
+                                        label="Descripción Corta *" :color="colorDialog" prepend-inner-icon="mdi-text-short"
                                         :rules="formRules.shortDescription"></v-text-field>
                                 </v-col>
                                 <v-col cols="12" sm="12" md="12" lg="12" xl="12">
                                     <v-textarea v-model="products.editedItem.longDescription"
-                                        label="Descripción Larga *" :rules="formRules.longDescription"></v-textarea>
+                                        label="Descripción Larga *" :color="colorDialog" prepend-inner-icon="mdi-text-long" :rules="formRules.longDescription"></v-textarea>
                                 </v-col>
                             </v-row>
                         </card-form>
                     </v-col>
                     <v-col cols="12" sm="6" md="4" lg="4" xl="4">
-                        <card-form title="Precios">
+                        <card-form title="Precios" icon="mdi-cash">
                             <v-row dense>
                                 <v-col cols="12" sm="12" md="12" lg="12" xl="12">
                                     <v-text-field v-model="products.editedItem.purchasePrice" label="Precio Compra *"
-                                        :color="colorDialog" :rules="formRules.purchasePrice"></v-text-field>
+                                        :color="colorDialog" prepend-inner-icon="mdi-currency-usd" :rules="formRules.purchasePrice"></v-text-field>
                                 </v-col>
                                 <v-col cols="12" sm="12" md="12" lg="12" xl="12">
                                     <v-text-field v-model="products.editedItem.rentPrice"
-                                        label="Precio Renta (por hora) *" :color="colorDialog"
+                                        label="Precio Renta (por hora) *" :color="colorDialog" prepend-inner-icon="mdi-currency-usd"
                                         :rules="formRules.rentPrice"></v-text-field>
                                 </v-col>
                             </v-row>
                         </card-form>
                     </v-col>
                     <v-col cols="12" sm="6" md="4" lg="4" xl="4">
-                        <card-form title="Stock / Inventario">
+                        <card-form title="Stock / Inventario" icon="mdi-list-box-outline">
                             <v-row dense>
                                 <v-col cols="12" sm="12" md="12" lg="12" xl="12">
                                     <v-text-field v-model="products.editedItem.maxStock" label="Stock Máximo *"
-                                        :color="colorDialog" :rules="formRules.maxStock"></v-text-field>
+                                        :color="colorDialog" prepend-inner-icon="" :rules="formRules.maxStock"></v-text-field>
                                 </v-col>
                                 <v-col cols="12" sm="12" md="12" lg="12" xl="12">
                                     <v-text-field v-model="products.editedItem.minStock" label="Stock Mínimo *"
@@ -133,10 +137,10 @@
                         </card-form>
                     </v-col>
                     <v-col cols="12" sm="12" md="4" lg="4" xl="4">
-                        <card-form title="Disponibilidad" class="h-100">
+                        <card-form title="Disponibilidad" class="h-100" icon="mdi-store-cog-outline">
                             <v-row dense>
                                 <v-col cols="12" sm="12" md="12" lg="12" xl="12">
-                                    <v-select v-model="products.editedItem.type" label="Tipo de Producto"
+                                    <v-select v-model="products.editedItem.type" label="Oferta de Producto *"
                                         :color="colorDialog" :items="productTypes" chips></v-select>
                                 </v-col>
                                 <v-col cols="12" sm="12" md="12" lg="12" xl="12">
@@ -147,7 +151,7 @@
                         </card-form>
                     </v-col>
                     <v-col cols="12">
-                        <card-form title="Imágenes del Equipo">
+                        <card-form title="Imágenes del Equipo" icon="mdi-image-outline">
                             <photo-picker-multiple />
                         </card-form>
                     </v-col>
@@ -312,7 +316,11 @@ export default {
             phoneOffice: [maxLength(15, 'Tel. Oficina'), onlyNumbers('Tel. Oficina'), onlyNumbers('Tel. Oficina')],
             email: [required('Email requerido'), maxLength(60, 'Email'), onlyEmail()]
         }
-        let categories = []
+        let categories = [
+            { id: '1', name: 'Neonatal' },
+            { id: '2', name: 'Laboratorio' },
+            { id: '3', name: 'Respiratorio' }
+        ]
         const productTypes = ['Venta', 'Renta', 'Ambos']
         /* Computed */
         const isEdited = computed(() => products.editedIndex !== -1)

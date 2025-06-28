@@ -97,7 +97,7 @@
             <div class="text-h6 text-medium-emphasis font-weight-bold">Total</div>
             <div class="text-h6 font-weight-bold">$ 10,350.0</div>
           </div>
-          <btn-custom block>Rentar equipo médico</btn-custom>
+          <btn-custom block to="/cart">Rentar equipo médico</btn-custom>
           <btn-custom variant="text" color="secondary" class="text-body-2 mt-2" block>Sigue buscando</btn-custom>
         </div>
       </template>
