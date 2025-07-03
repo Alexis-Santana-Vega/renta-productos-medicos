@@ -98,7 +98,6 @@
             <div class="text-h6 font-weight-bold">$ 10,350.0</div>
           </div>
           <btn-custom block to="/cart">Rentar equipo médico</btn-custom>
-          <btn-custom variant="text" color="secondary" class="text-body-2 mt-2" block>Sigue buscando</btn-custom>
         </div>
       </template>
     </v-navigation-drawer>
@@ -118,7 +117,8 @@ export default {
       { title: "Categorías", icon: "mdi-tag-outline", href: "/categories" },
       { title: "Ayuda", icon: "mdi-help-circle-outline", href: "/help" },
       { title: "Acerca de", icon: "mdi-information-variant", href: "/about" },
-      { title: "Usuarios", icon: "mdi-account-cog-outline", href: "/users" },
+      { title: "Administradores", icon: "mdi-account-cog-outline", href: "/admins" },
+      { title: "Usuarios", icon: "mdi-account-multiple-outline", href: "/users" },
     ],
     cartItems: [
       { id: '10', name: 'Phoroptor Yeosn SLY-100', photoUrl: 'https://isem.mx/wp-content/uploads/2019/11/phoroptorpartetrasera.jpg', price: 3000.0, stock: 1 },

@@ -1,24 +1,26 @@
 <template>
     <v-container fluid>
-        <card-table title="Usuarios Sistema" :subtitle="subtitlePage"
+        <card-table title="Usuarios Sistema" subtitle="Gestión de usuarios de la plataforma"
             icon="mdi-account-cog-outline">
             <v-row dense>
-                <v-col cols="12" sm="12" :md="isSysAdmin ?  4 : 8" :lg="isSysAdmin ? 4 : 8" :xl="isSysAdmin ? 6 : 9">
+                <v-col cols="12" sm="12" md="6" lg="8" xl="9">
                     <iterator-header>
                         <btn-custom prepend-icon="mdi-plus" :block="$isMobile()" @click="openDialogForm()">Nuevo
                             Usuario</btn-custom>
                     </iterator-header>
                 </v-col>
-                <v-col cols="12" sm="12" md="4" lg="4" xl="3" v-if="isSysAdmin">
-                    <iterator-header>
-                        <v-select placeholder="Locación" single-line hide-details prepend-inner-icon="mdi-map-marker-outline" :items="locations" item-value="id" item-title="name"></v-select>
-                    </iterator-header>
-                </v-col>
-                <v-col cols="12" sm="12" md="4" lg="4" xl="3">
+                <v-col cols="12" sm="12" md="6" lg="4" xl="3">
                     <iterator-header>
                         <v-text-field v-model="controls.search" placeholder="Buscar" single-line hide-details clearable
                             prepend-inner-icon="mdi-magnify"></v-text-field>
                     </iterator-header>
+                </v-col>
+                <v-col cols="12">
+                    <v-tabs v-model="controls.tabModel" grow>
+                        <v-tab :value="1">Todos</v-tab>
+                        <v-tab :value="2">Administradores</v-tab>
+                        <v-tab :value="3">Clientes</v-tab>
+                    </v-tabs>
                 </v-col>
                 <v-col cols="12">
                     <v-data-table :items="admins.items" :headers="headers" :search="controls.search">
@@ -30,10 +32,6 @@
                         </template>
                         <template v-slot:item.active="{ value }">
                             <v-chip :color="value ? 'success' : 'error'">{{ value ? 'Activo' : 'Inactivo' }}</v-chip>
-                        </template>
-                        <template v-slot:item.location="{ value }">
-                            <v-avatar icon="mdi-map-marker-outline" variant="tonal" color="tertiary" size="small" />
-                            <span class="text-caption ml-2">{{ value }}</span>
                         </template>
                         <template v-slot:item.actions="{ item }">
                             <btn-tooltip icon="mdi-delete-outline" text="Eliminar Usuario" color="error"
@@ -73,6 +71,11 @@
                                             :rules="formRules.userName"></v-text-field>
                                     </v-col>
                                     <v-col cols="12" sm="12" md="6" lg="6" xl="6">
+                                        <v-select v-model="admins.editedItem.roles" label="Selecciona un rol *"
+                                            prepend-inner-icon="mdi-account-cog-outline" :color="colorDialog"
+                                            :rules="formRules.roles" :items="roles" multiple chips></v-select>
+                                    </v-col>
+                                    <v-col cols="12" sm="12" md="6" lg="6" xl="6">
                                         <btn-custom variant="text" :block="isEdited" @click="openDialogPassword()"
                                             :color="colorDialog" v-if="isEdited">Cambiar
                                             Contraseña</btn-custom>
@@ -84,15 +87,7 @@
                                             @click:append-inner="controls.showPassword = !controls.showPassword"
                                             v-else></v-text-field>
                                     </v-col>
-                                    <v-col cols="12" sm="12" md="5" lg="5" xl="2">
-                                        <v-select v-model="admins.editedItem.roles" label="Selecciona un rol *"
-                                            prepend-inner-icon="mdi-account-cog-outline" :color="colorDialog"
-                                            :rules="formRules.roles" :items="roles" multiple chips></v-select>
-                                    </v-col>
-                                    <v-col cols="12" sm="12" md="5" lg="5" xl="2">
-                                        <v-select v-model="admins.editedItem.locationId" label="Locación" :items="locations" item-value="id" item-title="name" :readonly="!isSysAdmin"></v-select>
-                                    </v-col>
-                                    <v-col cols="12" sm="12" md="2" lg="2" xl="2">
+                                    <v-col cols="12" sm="12" md="6" lg="6" xl="6">
                                         <v-checkbox v-model="admins.editedItem.active" hide-details :color="colorDialog"
                                             label="Activo"></v-checkbox>
                                     </v-col>
@@ -178,13 +173,6 @@ export default {
     setup() {
         const { proxy } = getCurrentInstance()
         const globals = proxy
-        /* User Params */
-        const user = {
-            role: globals.$randomIndex(['sysadmin', 'admin']),
-            locationId: '1',
-            location: 'Monterrey, N.L'
-        }
-        const isSysAdmin = user.role === 'sysadmin'
         /* Data */
         const controls = reactive({
             dialogForm: false,
@@ -201,10 +189,10 @@ export default {
         const admins = reactive({
             items: [],
             editedItem: {
-                id: '', locationId: null, firstName: '', lastName: '', userName: '', password: '', roles: ['cliente'], active: true, mobilePhone: '', phoneOffice: '', phoneExt: '', email: ''
+                id: '', firstName: '', lastName: '', userName: '', password: '', roles: ['cliente'], active: true, mobilePhone: '', phoneOffice: '', phoneExt: '', email: ''
             },
             defaultItem: {
-                id: '', locationId: null, firstName: '', lastName: '', userName: '', password: '', roles: ['cliente'], active: true, mobilePhone: '', phoneOffice: '', phoneExt: '', email: ''
+                id: '', firstName: '', lastName: '', userName: '', password: '', roles: ['cliente'], active: true, mobilePhone: '', phoneOffice: '', phoneExt: '', email: ''
             },
             passwordEditedItem: {
                 idUser: '', oldPassword: '', newPassword: ''
@@ -234,11 +222,6 @@ export default {
             email: [required('Email requerido'), maxLength(60, 'Email'), onlyEmail()]
         }
         const roles = ['admin', 'cliente']
-        const locations = [
-            { id: '1', name: 'Monterrey, N.L' },
-            { id: '2', name: 'Apodaca, N.L' },
-        ]
-        const subtitlePage = isSysAdmin ? 'Gestión de todos los usuarios del sistema' : `Gestión de los usuarios de: ${user.location}`
         /* Watchers */
         watch(() => controls.tabModel, (nv, ov) => {
             /* API Call to pagination */
@@ -251,15 +234,10 @@ export default {
 
         /* Methods */
         const initialize = () => {
-            if (isSysAdmin) headers.splice(4, 0, { key: 'location', title: 'LOCACIÓN' })
-            else {
-                admins.defaultItem.locationId = user.locationId
-                admins.editedItem.locationId = user.locationId
-            }
             admins.items.splice(0, admins.items.length,
-                { id: '1', firstName: 'Alexis', lastName: 'Santana', fullName: 'Alexis Santana', userName: 'alexis.santana', mobilePhone: '', phoneOffice: '', phoneExt: '', roles: ['admin'], active: true, email: 'alexis@gmail.com', location: 'Monterrey, N.L', locationId: '1' },
-                { id: '2', firstName: 'Gerardo', lastName: 'Suarez', fullName: 'Gerardo Suarez', userName: 'gerardo.suarez', mobilePhone: '', phoneOffice: '', phoneExt: '', roles: ['admin', 'cliente'], active: true, email: 'gerardo@gmail.com', location: 'Apodaca, N.L', locationId: '2' },
-                { id: '3', firstName: 'Liz', lastName: 'Vega', fullName: 'Liz Vega', lastName: 'Cruz', userName: 'liz.vega', mobilePhone: '', phoneOffice: '', phoneExt: '', roles: ['admin'], active: false, email: 'liz@gmail.com', location: 'Monterrey, N.L', locationId: '1' }
+                { id: '1', firstName: 'Alexis', lastName: 'Santana', fullName: 'Alexis Santana', userName: 'alexis.santana', mobilePhone: '', phoneOffice: '', phoneExt: '', roles: ['admin'], active: true, email: 'alexis@gmail.com' },
+                { id: '2', firstName: 'Gerardo', lastName: 'Suarez', fullName: 'Gerardo Suarez', userName: 'gerardo.suarez', mobilePhone: '', phoneOffice: '', phoneExt: '', roles: ['admin', 'cliente'], active: true, email: 'gerardo@gmail.com' },
+                { id: '3', firstName: 'Liz', lastName: 'Vega', fullName: 'Liz Vega', lastName: 'Cruz', userName: 'liz.vega', mobilePhone: '', phoneOffice: '', phoneExt: '', roles: ['admin'], active: false, email: 'liz@gmail.com' }
             )
         }
         const openDialogForm = () => {
@@ -330,7 +308,7 @@ export default {
         /*  */
         initialize()
 
-        return { headers, deleteAdmin, editAdmin, controls, admins, openDialogForm, closeDialogForm, titleDialog, iconDialog, colorDialog, roles, closeDialogPassword, openDialogPassword, isEdited, savePassword, saveAdmin, formRules, subtitlePage, isSysAdmin, locations }
+        return { headers, deleteAdmin, editAdmin, controls, admins, openDialogForm, closeDialogForm, titleDialog, iconDialog, colorDialog, roles, closeDialogPassword, openDialogPassword, isEdited, savePassword, saveAdmin, formRules }
     }
 }
 </script>
