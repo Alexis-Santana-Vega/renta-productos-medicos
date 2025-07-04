@@ -124,7 +124,7 @@ export default {
         const globals = proxy
         /** Link to Whats App */
         const phoneNumber = import.meta.env.VITE_WHATSAPP_NUMBER
-        const message = "Buen día, me interesa conocer más acerca de Renta un equipo médico"
+        const message = "¡Buen día! \n\n Me interesa conocer más acerca de *Renta un Equipo Médico*. ¿Podría compartirme más detalles?"
         const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}` 
         /** Data */
         const controls = reactive({
