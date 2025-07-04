@@ -4,12 +4,12 @@
       <v-app-bar-nav-icon @click.stop="openDrawer()"></v-app-bar-nav-icon>
       <v-app-bar-title v-if="!$isMobile()">Dashboard</v-app-bar-title>
       <template v-slot:append>
-        <v-btn @click="darkmodeModel = !darkmodeModel"
-          :icon="darkmodeModel ? 'mdi-weather-night' : 'mdi-weather-sunny'"></v-btn>
-        <v-btn icon="mdi-cart-outline" @click="drawerCart = !drawerCart"></v-btn>
+        <v-btn @click="controls.darkmodeModel = !controls.darkmodeModel"
+          :icon="controls.darkmodeModel ? 'mdi-weather-night' : 'mdi-weather-sunny'"></v-btn>
+        <v-btn icon="mdi-cart-outline" @click="controls.drawerCart = !controls.drawerCart"></v-btn>
       </template>
     </v-app-bar>
-    <v-navigation-drawer v-model="drawer" order="1" :rail="rail" :rail-width="64">
+    <v-navigation-drawer v-model="controls.drawer" order="1" :rail="controls.rail" :rail-width="64">
       <template v-slot:prepend>
       </template>
       <v-list class="px-2" variant="flat" color="primary">
@@ -26,7 +26,7 @@
             <v-icon class="ml-n1 mr-n2" :icon="item.icon"></v-icon>
           </template>
           <v-list-item-title>{{ item.title }}</v-list-item-title>
-          <v-tooltip v-if="rail" activator="parent" location="end" :text="item.title"></v-tooltip>
+          <v-tooltip v-if="controls.rail" activator="parent" location="end" :text="item.title"></v-tooltip>
         </v-list-item>
       </v-list>
       <template v-slot:append>
@@ -47,12 +47,12 @@
               <v-icon class="ml-n1 mr-n2" icon="mdi-logout"></v-icon>
             </template>
             <v-list-item-title>Cerrar Sesión</v-list-item-title>
-            <v-tooltip v-if="rail" activator="parent" location="end" text="Cerrar Sesión"></v-tooltip>
+            <v-tooltip v-if="controls.rail" activator="parent" location="end" text="Cerrar Sesión"></v-tooltip>
           </v-list-item>
         </v-list>
       </template>
     </v-navigation-drawer>
-    <v-navigation-drawer v-model="drawerCart" location="right" temporary order="0" width="320">
+    <v-navigation-drawer v-model="controls.drawerCart" location="right" temporary order="0" width="320">
       <template v-slot:prepend>
         <v-toolbar class="border-b" rounded="0">
           <template v-slot:extension>
@@ -62,7 +62,7 @@
           <v-avatar icon="mdi-cart-outline" class="ml-4" />
           <v-toolbar-title>Mi Carrito</v-toolbar-title>
           <template v-slot:append>
-            <v-btn icon="mdi-window-close" @click="drawerCart = false"></v-btn>
+            <v-btn icon="mdi-window-close" @click="controls.drawerCart = false"></v-btn>
           </template>
         </v-toolbar>
       </template>
@@ -108,10 +108,19 @@
 </template>
 
 <script>
+import { computed, getCurrentInstance, ref } from 'vue'
+import { reactive, watch } from 'vue'
+import { useDisplay, useTheme } from 'vuetify'
+
 
 export default {
-  data: () => ({
-    menuItems: [
+  setup() {
+    const { proxy } = getCurrentInstance()
+    const globals = proxy
+    const { mdAndDown } = useDisplay()
+    const theme = useTheme()
+    /** Data */
+    const menuItems = [
       { title: "Inicio", icon: "mdi-home-outline", href: "/" },
       { title: "Equipos", icon: "mdi-hospital-box-outline", href: "/equipment" },
       { title: "Categorías", icon: "mdi-tag-outline", href: "/categories" },
@@ -119,68 +128,64 @@ export default {
       { title: "Acerca de", icon: "mdi-information-variant", href: "/about" },
       { title: "Administradores", icon: "mdi-account-cog-outline", href: "/admins" },
       { title: "Usuarios", icon: "mdi-account-multiple-outline", href: "/users" },
-    ],
-    cartItems: [
+    ]
+    const cartItems = ref([
       { id: '10', name: 'Phoroptor Yeosn SLY-100', photoUrl: 'https://isem.mx/wp-content/uploads/2019/11/phoroptorpartetrasera.jpg', price: 3000.0, stock: 1 },
       { id: '20', name: 'Sistema VIOS 300s', photoUrl: 'https://www.somatechnology.com/spanish/wp-content/uploads/sites/2/2018/03/ERBE-VIO-300S-Electrobisturis-2.jpg', price: 6000.0, stock: 2 },
       { id: '30', name: 'Morcelador Gomedil 2025', photoUrl: 'https://endoscopia-gdl.com.mx/wp-content/uploads/2024/07/PAGINA-WEB-MORCELADOR-HAWK-2024.jpg', price: 1350.0, stock: 1 }
-    ],
-    rail: null,
-    drawer: null,
-    drawerCart: null,
-    darkmodeModel: null,
-  }),
-  watch: {
-    darkmodeModel(nv) {
+    ])
+    const controls = reactive({
+      rail: null,
+      drawer: null,
+      drawerCart: null,
+      darkmodeModel: null,
+    })
+    /** Watchers */
+    watch(() => controls.darkmodeModel, (nv) => {
       localStorage.setItem("darkModeApp", JSON.stringify(nv))
-      this.$vuetify.theme.global.name = nv ? "customDarkTheme" : "customLightTheme"
-    },
-  },
-  computed: {
-    cartProducts() {
-      return this.cartItems.reduce((a, p) => { return a + p.stock }, 0)
-    }
-  },
-  created() {
-    this.getDarkMode()
-  },
-  mounted() {
-    this.rail = !this.$vuetify.display.mdAndDown
-  },
-  methods: {
-    openDrawer() {
-      if (this.$vuetify.display.mdAndDown) {
-        this.drawer = !this.drawer
-        this.rail = false
+      globals.$vuetify.theme.global.name = nv ? "customDarkTheme" : "customLightTheme"
+    })
+    /** Computed Methods */
+    const cartProducts = computed(() => cartItems.value.reduce((a, p) => { return a + p.stock }, 0))
+    /** Methods */
+    const openDrawer = () => {
+      if (mdAndDown.value) {
+        controls.drawer = !controls.drawer
+        controls.rail = false
       } else {
-        this.rail = !this.rail
+        controls.rail = !controls.rail
       }
-    },
-    changeTheme(n) {
-      this.$vuetify.theme.global.name = n
-    },
-    getDarkMode() {
+    }
+    //const changeTheme = (n) => globals.$vuetify.theme.global.name = n
+    const changeTheme = (n) => theme.global.name = n
+    const getDarkMode = () => {
       const darkModeApp = JSON.parse(localStorage.getItem("darkModeApp"))
       const darkModeNav =
         window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
       if (darkModeApp === null) {
-        this.darkmodeModel = darkModeNav
+        controls.darkmodeModel = darkModeNav
         localStorage.setItem("darkModeApp", JSON.stringify(darkModeNav))
       } else {
-        this.darkmodeModel = darkModeApp
+        controls.darkmodeModel = darkModeApp
       }
-    },
-    logout() {
-      this.$swalConfirm('Cerrar sesión', 'info', '¿Desea salir de Renta Equipo?')
+    }
+    const logout =() => {
+      globals.$swalConfirm('Cerrar sesión', 'info', '¿Desea salir de Renta Equipo?')
         .then(result => {
           if (result.isConfirmed) {
             /* Fetch */
             window.location = '/'
           }
         })
-        .catch(error => this.$toast.fire({ icon: 'error', text: 'No fue posible cerrar la sesión' }))
+        .catch(error => globals.$toast.fire({ icon: 'error', text: 'No fue posible cerrar la sesión' }))
     }
-  },
+    const initialize = () => {
+      getDarkMode()
+      controls.rail = !mdAndDown.value
+    }
+    initialize()
+    return { cartItems, controls, logout, changeTheme, openDrawer, cartProducts, menuItems }
+  }
 }
 </script>
 <style>
