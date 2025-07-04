@@ -81,7 +81,8 @@
                                         <v-text-field label="Número Interior *"></v-text-field>
                                     </v-col>
                                     <v-col cols="12" sm="12" md="12" lg="4" xl="4">
-                                        <v-select label="Tipo de Domicilio *" :items="['Residencial', 'Laboral']"></v-select>
+                                        <v-select label="Tipo de Domicilio *"
+                                            :items="['Residencial', 'Laboral']"></v-select>
                                     </v-col>
                                     <v-col cols="12" sm="12" md="12" lg="12" xl="12">
                                         <v-textarea label="Indicaciones de entrega"></v-textarea>
@@ -102,7 +103,98 @@
                     </v-col>
                     <v-col cols="12">
                         <card-table title="Método de Pago" icon="mdi-credit-card-multiple-outline">
-                            
+                            <v-expansion-panels v-model="controls.expansionModel">
+                                <v-expansion-panel>
+                                    <v-expansion-panel-title>
+                                        <v-row no-gutters>
+                                            <v-col cols="8" class="d-flex align-center">
+                                                <v-checkbox hide-details single-line></v-checkbox>
+                                                Tarjeta de crédito o débito
+                                            </v-col>
+                                            <v-col cols="4">
+                                                <v-avatar>
+                                                    <v-img
+                                                        src="https://logoeps.com/wp-content/uploads/2025/02/Visa-logo-.png"></v-img>
+                                                </v-avatar>
+                                                <v-avatar>
+                                                    <v-img
+                                                        src="https://www.mastercard.com/content/dam/public/mastercardcom/mx/es/logos/mastercard-og-image.png"></v-img>
+                                                </v-avatar>
+                                                <v-avatar>
+                                                    <v-img
+                                                        src="https://cdn-icons-png.flaticon.com/512/825/825539.png"></v-img>
+                                                </v-avatar>
+                                            </v-col>
+                                        </v-row>
+                                    </v-expansion-panel-title>
+                                    <v-expansion-panel-text>
+                                        <v-row>
+                                            <v-col cols="12" sm="12" md="12" lg="5" xl="5" align="center" class="mb-6">
+                                                <v-card class="text-caption text-uppercase pa-4 background-card"
+                                                    color="secondary" max-width="300">
+                                                    <div class="d-flex justify-space-between">
+                                                        <v-avatar rounded="0" size="24" class="ml-4 mt-4">
+                                                            <v-img
+                                                                src="https://png.pngtree.com/png-vector/20240601/ourmid/pngtree-creditcard-chip-business-chip-detail-png-image_12572016.png"></v-img>
+                                                        </v-avatar>
+                                                        <div>Mi tarjeta</div>
+                                                    </div>
+                                                    <div class="my-4 text-start">0000 0000 0000 0000</div>
+                                                    <div class="d-flex justify-space-between">
+                                                        <div>Alexis Santana</div>
+                                                        <div>00/00</div>
+                                                    </div>
+                                                </v-card>
+                                            </v-col>
+                                            <v-col cols="12" sm="12" md="12" lg="7" xl="7">
+                                                <v-row dense>
+                                                    <v-col cols="12" sm="12" md="12" lg="12" xl="12">
+                                                        <v-text-field label="Número de Tarjeta *"
+                                                            placeholder="0000 0000 0000 0000"></v-text-field>
+                                                    </v-col>
+                                                    <v-col cols="12" sm="12" md="6" lg="6" xl="6">
+                                                        <v-text-field label="Fecha Vencimiento *"
+                                                            placeholder="MM/AA"></v-text-field>
+                                                    </v-col>
+                                                    <v-col cols="12" sm="12" md="6" lg="6" xl="6">
+                                                        <v-text-field label="CVV (Código Seguridad) *"
+                                                            placeholder="000"></v-text-field>
+                                                    </v-col>
+                                                    <v-col cols="12" sm="12" md="12" lg="12" xl="12">
+                                                        <v-text-field
+                                                            label="Nombre del Titular de la Tarjeta *"></v-text-field>
+                                                    </v-col>
+                                                    <v-col cols="12" class="text-caption text-disabled">* Campos
+                                                        requeridos</v-col>
+                                                    <v-col cols="12" align="end">
+                                                        <btn-custom color="tertiary">Guardar Tarjeta</btn-custom>
+                                                    </v-col>
+                                                </v-row>
+                                            </v-col>
+                                        </v-row>
+                                    </v-expansion-panel-text>
+                                </v-expansion-panel>
+                                <v-expansion-panel>
+                                    <v-expansion-panel-title>
+                                        <v-row no-gutters>
+                                            <v-col cols="8" class="d-flex align-center">
+                                                <v-checkbox hide-details single-line></v-checkbox>
+                                                PayPal
+                                            </v-col>
+                                            <v-col cols="4">
+                                                <v-avatar>
+                                                    <v-img
+                                                        src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Paypal_2014_logo.png"></v-img>
+                                                </v-avatar>
+                                            </v-col>
+                                        </v-row>
+                                    </v-expansion-panel-title>
+                                    <v-expansion-panel-text class="text-center">
+                                        <v-icon icon="mdi-credit-card-fast-outline" class="text-medium-emphasis" size="64"></v-icon>
+                                        <div>Después de hacer clic en <strong>Finalizar Compra</strong>, se te redigirá a PayPal para completar tu compra.</div>
+                                    </v-expansion-panel-text>
+                                </v-expansion-panel>
+                            </v-expansion-panels>
                         </card-table>
                     </v-col>
                     <v-col cols="12">
@@ -114,6 +206,8 @@
     </v-container>
 </template>
 <script>
+import { reactive } from 'vue'
+
 export default {
     setup() {
         const cartItems = [
@@ -124,7 +218,15 @@ export default {
         const cartItemsRent = [
             { id: '50', name: 'Sistema VIOS 300s', photoUrl: 'https://www.somatechnology.com/spanish/wp-content/uploads/sites/2/2018/03/ERBE-VIO-300S-Electrobisturis-2.jpg', price: 6000.0, stock: 2 },
         ]
-        return { cartItems, cartItemsRent }
+        const controls = reactive({
+            expansionModel: null
+        })
+        return { cartItems, cartItemsRent, controls }
     }
 }
 </script>
+<style scoped>
+.background-card {
+    background: linear-gradient(90deg, rgba(30, 58, 138, 1) 0%, rgba(59, 130, 246, 1) 50%, rgba(16, 185, 129, 1) 100%);
+}
+</style>

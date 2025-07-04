@@ -165,5 +165,8 @@ export default createVuetify({
       showSize: 1024,
       persistentHint: true
     },
+    VCheckbox: {
+      color: 'primary'
+    }
   }
 })
