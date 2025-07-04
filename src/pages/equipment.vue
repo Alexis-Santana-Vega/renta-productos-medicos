@@ -342,10 +342,10 @@ export default {
                 { id: '6', categoryId: '2', code: '500255', name: 'NeoMonitor V3', description: 'Monitorea signos vitales del recién nacido', categoryName: 'Neonatal', stock: 4, status: 'Ocupado' }
             )
             summary.value = [
-                { text: 'T. Productos', number: '6', icon: 'mdi-table-check', color: 'secondary' },
+                { text: 'Total', number: '6', icon: 'mdi-table-check', color: 'secondary' },
                 { text: 'Disponibles', number: '3', icon: 'mdi-check-circle-outline', color: 'success' },
-                { text: 'Ocupados', number: '2', icon: 'mdi-table-cancel', color: 'warning' },
-                { text: 'Suspendidos', number: '1', icon: 'mdi-close-circle-outline', color: 'error' }
+                { text: 'Rentados', number: '2', icon: 'mdi-table-cancel', color: 'warning' },
+                { text: 'Mantenimiento', number: '1', icon: 'mdi-close-circle-outline', color: 'error' }
             ]
             categories = [
                 { id: '1', name: 'Laboratorio' },

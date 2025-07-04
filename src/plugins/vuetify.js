@@ -100,6 +100,9 @@ export default createVuetify({
     VList: {
       slim: true,
     },
+    VWindow: {
+      touch: false,
+    },
     /* Defaults for feedback */
     VTabs: {
       color: 'primary',
