@@ -7,7 +7,7 @@
             <v-row class="h-100" no-gutters>
                 <v-col cols="0" sm="12" md="6" lg="6" xl="7" class="pa-4">
                     <div
-                        class="rounded-lg background-image d-flex flex-column align-center justify-center h-100 text-white pa-4">
+                        class="rounded-lg background-image d-flex flex-column align-center justify-center h-100 text-white px-4 py-10">
                         <div class="text-h3 font-weight-black">Bienvenido</div>
                         <div class="my-2 font-weight-medium">Tu equipo médico, en un clic.</div>
                         <div class="d-flex">
