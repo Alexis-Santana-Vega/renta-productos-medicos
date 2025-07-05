@@ -122,6 +122,7 @@ export default {
     /** Data */
     const menuItems = [
       { title: "Inicio", icon: "mdi-home-outline", href: "/" },
+      { title: "Buscar", icon: "mdi-magnify", href: "/search" },
       { title: "Equipos", icon: "mdi-hospital-box-outline", href: "/equipment" },
       { title: "Categorías", icon: "mdi-tag-outline", href: "/categories" },
       { title: "Ayuda", icon: "mdi-help-circle-outline", href: "/help" },

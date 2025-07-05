@@ -169,7 +169,8 @@ export default createVuetify({
       persistentHint: true
     },
     VCheckbox: {
-      color: 'primary'
+      color: 'primary',
+      density: 'comfortable'
     }
   }
 })

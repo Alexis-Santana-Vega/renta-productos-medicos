@@ -74,7 +74,7 @@
                 </card-table>
             </v-col>
         </v-row>
-        <v-dialog v-model="controls.dialogProduct" persistent scrollable fullscreen>
+        <v-dialog v-model="controls.dialogProduct" persistent scrollable fullscreen transition="fade-transition">
             <card-dialog :title="titleDialog" :icon="iconDialog" :loading="controls.loadingProduct"
                 :disabled="controls.loadingProduct" @close="closeDialogProduct()" actions fullscreen>
                 <v-row>
@@ -83,13 +83,15 @@
                             <v-row dense>
                                 <v-col cols="12" sm="12" md="4" lg="3" xl="3">
                                     <v-text-field v-model="products.editedItem.barcode" label="Código de Barras *"
-                                        :color="colorDialog" :rules="formRules.barcode" prepend-inner-icon="mdi-identifier"
-                                        append-inner-icon="mdi-barcode-scan"
+                                        :color="colorDialog" :rules="formRules.barcode"
+                                        prepend-inner-icon="mdi-identifier" append-inner-icon="mdi-barcode-scan"
                                         @click:append-inner="console.log('Sacando el Scanner')"></v-text-field>
                                 </v-col>
                                 <v-col cols="12" sm="12" md="8" lg="3" xl="3">
-                                    <v-select v-model="products.editedItem.categoryId" label="Categoría *" :color="colorDialog" prepend-inner-icon="mdi-tag-multiple-outline"
-                                    :rules="formRules.categoryId" :items="categories" item-value="id" item-title="name"></v-select>
+                                    <v-select v-model="products.editedItem.categoryId" label="Categoría *"
+                                        :color="colorDialog" prepend-inner-icon="mdi-tag-multiple-outline"
+                                        :rules="formRules.categoryId" :items="categories" item-value="id"
+                                        item-title="name"></v-select>
                                 </v-col>
                                 <v-col cols="12" sm="12" md="8" lg="6" xl="6">
                                     <v-text-field v-model="products.editedItem.name" label="Nombre Equipo *"
@@ -97,12 +99,15 @@
                                 </v-col>
                                 <v-col cols="12" sm="12" md="12" lg="12" xl="12">
                                     <v-text-field v-model="products.editedItem.shortDescription"
-                                        label="Descripción Corta *" :color="colorDialog" prepend-inner-icon="mdi-text-short"
+                                        label="Descripción Corta *" :color="colorDialog"
+                                        prepend-inner-icon="mdi-text-short"
                                         :rules="formRules.shortDescription"></v-text-field>
                                 </v-col>
                                 <v-col cols="12" sm="12" md="12" lg="12" xl="12">
                                     <v-textarea v-model="products.editedItem.longDescription"
-                                        label="Descripción Larga *" :color="colorDialog" prepend-inner-icon="mdi-text-long" :rules="formRules.longDescription"></v-textarea>
+                                        label="Descripción Larga *" :color="colorDialog"
+                                        prepend-inner-icon="mdi-text-long"
+                                        :rules="formRules.longDescription"></v-textarea>
                                 </v-col>
                             </v-row>
                         </card-form>
@@ -112,11 +117,13 @@
                             <v-row dense>
                                 <v-col cols="12" sm="12" md="12" lg="12" xl="12">
                                     <v-text-field v-model="products.editedItem.purchasePrice" label="Precio Compra *"
-                                        :color="colorDialog" prepend-inner-icon="mdi-currency-usd" :rules="formRules.purchasePrice"></v-text-field>
+                                        :color="colorDialog" prepend-inner-icon="mdi-currency-usd"
+                                        :rules="formRules.purchasePrice"></v-text-field>
                                 </v-col>
                                 <v-col cols="12" sm="12" md="12" lg="12" xl="12">
                                     <v-text-field v-model="products.editedItem.rentPrice"
-                                        label="Precio Renta (por hora) *" :color="colorDialog" prepend-inner-icon="mdi-currency-usd"
+                                        label="Precio Renta (por hora) *" :color="colorDialog"
+                                        prepend-inner-icon="mdi-currency-usd"
                                         :rules="formRules.rentPrice"></v-text-field>
                                 </v-col>
                             </v-row>
@@ -127,7 +134,8 @@
                             <v-row dense>
                                 <v-col cols="12" sm="12" md="12" lg="12" xl="12">
                                     <v-text-field v-model="products.editedItem.maxStock" label="Stock Máximo *"
-                                        :color="colorDialog" prepend-inner-icon="" :rules="formRules.maxStock"></v-text-field>
+                                        :color="colorDialog" prepend-inner-icon=""
+                                        :rules="formRules.maxStock"></v-text-field>
                                 </v-col>
                                 <v-col cols="12" sm="12" md="12" lg="12" xl="12">
                                     <v-text-field v-model="products.editedItem.minStock" label="Stock Mínimo *"
@@ -156,12 +164,12 @@
                         </card-form>
                     </v-col>
                     <v-col cols="12">
-                        <card-form title="Proveedores">
+                        <card-form title="Proveedores" icon="mdi-handshake-outline">
                             <v-row dense>
                                 <v-col cols="12" sm="12" md="6" lg="8" xl="9">
                                     <iterator-header>
                                         <btn-custom prepend-icon="mdi-plus" color="tertiary" :block="$isMobile()"
-                                            @click="openDialogProvider()">Nuevo Proveedor</btn-custom>
+                                            @click="openDialogProv()">Nuevo Proveedor</btn-custom>
                                     </iterator-header>
                                 </v-col>
                                 <v-col cols="12" sm="12" md="6" lg="4" xl="3">
@@ -171,7 +179,8 @@
                                     </iterator-header>
                                 </v-col>
                                 <v-col cols="12">
-                                    <v-data-table :items="products.editedItem.providers" :headers="headersProvider" :search="controls.searchProvider"></v-data-table>
+                                    <v-data-table :items="products.editedItem.providers" :headers="headersProvider"
+                                        :search="controls.searchProvider"></v-data-table>
                                 </v-col>
                             </v-row>
                         </card-form>
@@ -186,16 +195,26 @@
             </card-dialog>
         </v-dialog>
         <v-dialog v-model="controls.dialogProvider" persistent scrollable width="900" :fullscreen="$isMobile()">
-            <card-dialog :title="titleProvDialog" :icon="iconProvDialog" :loading="controls.loadingProvider" :disabled="controls.loadingProvider" actions mobile>
+            <card-dialog :title="titleProvDialog" :icon="iconProvDialog" :loading="controls.loadingProvider"
+                :disabled="controls.loadingProvider" @close="closeDialogProv()" actions mobile>
                 <v-row>
                     <v-col cols="12">
-                        <card-form title="Datos Personales">
+                        <card-form title="Datos Generales">
                             <v-row dense>
                                 <v-col cols="12" sm="12" md="12" lg="12" xl="12">
-                                    <v-text-field v-model="providers.editedItem.firstName" label="Nombre(s) *" :rules="formProvRules.firstName"></v-text-field>
+                                    <v-text-field v-model="providers.editedItem.name"
+                                        label="Nombre Comercial / Razón Social *"
+                                        prepend-inner-icon="mdi-handshake-outline" :color="colorProvDialog"
+                                        :rules="[]"></v-text-field>
                                 </v-col>
-                                <v-col cols="12" sm="12" md="12" lg="12" xl="12">
-                                    <v-text-field v-model="providers.editedItem.lastName" label="Apellido(s) *" :rules="formProvRules.lastName"></v-text-field>
+                                <v-col cols="12" sm="12" md="6" lg="4" xl="4">
+                                    <v-text-field v-model="providers.editedItem.rfc" label="RFC *"
+                                        prepend-inner-icon="mdi-file-outline" :color="colorProvDialog"
+                                        :rules="[]"></v-text-field>
+                                </v-col>
+                                <v-col cols="12" sm="12" md="6" lg="8" xl="8">
+                                    <v-checkbox v-model="providers.editedItem.active" label="Proveedor Activo"
+                                        :color="colorProvDialog" hide-details single-line></v-checkbox>
                                 </v-col>
                             </v-row>
                         </card-form>
@@ -203,26 +222,61 @@
                     <v-col cols="12">
                         <card-form title="Información de Contacto">
                             <v-row dense>
+                                <v-col cols="12" sm="12" md="12" lg="12" xl="12">
+                                    <v-text-field v-model="providers.editedItem.providerName" label="Nombre Contacto *"
+                                        prepend-inner-icon="mdi-account-outline"
+                                        :color="colorProvDialog"></v-text-field>
+                                </v-col>
                                 <v-col cols="12" sm="12" md="4" lg="4" xl="4">
-                                        <v-text-field v-model="providers.editedItem.mobilePhone" label="Tel. Móvil *"
-                                            prepend-inner-icon="mdi-phone-outline" :color="colorProvDialog"
-                                            :rules="formProvRules.mobilePhone"></v-text-field>
-                                    </v-col>
-                                    <v-col cols="12" sm="12" md="4" lg="4" xl="4">
-                                        <v-text-field v-model="providers.editedItem.phoneOffice" label="Tel. Oficina"
-                                            prepend-inner-icon="mdi-deskphone" :color="colorProvDialog"
-                                            :rules="formProvRules.phoneOffice"></v-text-field>
-                                    </v-col>
-                                    <v-col cols="12" sm="12" md="4" lg="4" xl="4">
-                                        <v-text-field v-model="providers.editedItem.phoneExt" label="Extensión"
-                                            prepend-inner-icon="mdi-card-account-phone-outline" :color="colorProvDialog"
-                                            :rules="formProvRules.phoneExt"></v-text-field>
-                                    </v-col>
-                                    <v-col cols="12" sm="12" md="12" lg="12" xl="12">
-                                        <v-text-field v-model="providers.editedItem.email" label="Email *"
-                                            prepend-inner-icon="mdi-email-outline" :color="colorProvDialog"
-                                            :rules="formProvRules.email"></v-text-field>
-                                    </v-col>
+                                    <v-text-field v-model="providers.editedItem.mobilePhone" label="Tel. Móvil *"
+                                        prepend-inner-icon="mdi-phone-outline" :color="colorProvDialog"
+                                        :rules="formProvRules.mobilePhone"></v-text-field>
+                                </v-col>
+                                <v-col cols="12" sm="12" md="4" lg="4" xl="4">
+                                    <v-text-field v-model="providers.editedItem.phoneOffice" label="Tel. Oficina"
+                                        prepend-inner-icon="mdi-deskphone" :color="colorProvDialog"
+                                        :rules="formProvRules.phoneOffice"></v-text-field>
+                                </v-col>
+                                <v-col cols="12" sm="12" md="4" lg="4" xl="4">
+                                    <v-text-field v-model="providers.editedItem.phoneExt" label="Extensión"
+                                        prepend-inner-icon="mdi-card-account-phone-outline" :color="colorProvDialog"
+                                        :rules="formProvRules.phoneExt"></v-text-field>
+                                </v-col>
+                                <v-col cols="12" sm="12" md="12" lg="12" xl="12">
+                                    <v-text-field v-model="providers.editedItem.email" label="Email *"
+                                        prepend-inner-icon="mdi-email-outline" :color="colorProvDialog"
+                                        :rules="formProvRules.email"></v-text-field>
+                                </v-col>
+                            </v-row>
+                        </card-form>
+                    </v-col>
+                    <v-col cols="12">
+                        <card-form title="Dirección">
+                            <v-row dense>
+                                <v-col cols="12" sm="12" md="4" lg="4" xl="4">
+                                    <v-select label="País *" prepend-inner-icon="mdi-earth" :color="colorProvDialog"
+                                        :rules="[]"></v-select>
+                                </v-col>
+                                <v-col cols="12" sm="12" md="4" lg="4" xl="4">
+                                    <v-select label="Estado/Provincia *" prepend-inner-icon="mdi-town-hall" :color="colorProvDialog"
+                                        :rules="[]"></v-select>
+                                </v-col>
+                                <v-col cols="12" sm="12" md="4" lg="4" xl="4">
+                                    <v-text-field label="Código Postal *" prepend-inner-icon="" :color="colorProvDialog"
+                                        :rules="[]"></v-text-field>
+                                </v-col>
+                                <v-col cols="12" sm="12" md="6" lg="6" xl="6">
+                                    <v-text-field label="Ciudad *" prepend-inner-icon="mdi-city-variant-outline" :color="colorProvDialog"
+                                        :rules="[]"></v-text-field>
+                                </v-col>
+                                <v-col cols="12" sm="12" md="6" lg="6" xl="6">
+                                    <v-text-field label="Colonia *" prepend-inner-icon="mdi-home-city-outline" :color="colorProvDialog"
+                                        :rules="[]"></v-text-field>
+                                </v-col>
+                                <v-col cols="12" sm="12" md="12" lg="12" xl="12">
+                                    <v-text-field label="Dirección *" prepend-inner-icon="mdi-home-city-outline" :color="colorProvDialog"
+                                        :rules="[]"></v-text-field>
+                                </v-col>
                             </v-row>
                         </card-form>
                     </v-col>
@@ -230,7 +284,8 @@
                 </v-row>
                 <template v-slot:actions>
                     <v-spacer />
-                    <btn-custom variant="tonal" :color="colorProvDialog" @click="closeDialogProv()">Cancelar</btn-custom>
+                    <btn-custom variant="tonal" :color="colorProvDialog"
+                        @click="closeDialogProv()">Cancelar</btn-custom>
                     <btn-custom variant="elevated" :color="colorProvDialog" :disabled="!controls.validProvForm"
                         :loading="controls.loadingProvider" @click="saveProv()">Guardar</btn-custom>
                 </template>
@@ -241,7 +296,7 @@
 </template>
 <script>
 import { maxLength, onlyEmail, onlyNumbers, required, requiredLength } from '@/plugins/globalRules';
-import { computed, getCurrentInstance } from 'vue';
+import { computed, getCurrentInstance, provide } from 'vue';
 import { reactive, ref } from 'vue';
 
 export default {
@@ -370,8 +425,25 @@ export default {
                 openDialogProduct()
             }, 500)
         }
+        const openDialogProv = () => controls.dialogProvider = true
+        const closeDialogProv = () => {
+            controls.dialogProvider = false
+            globals.$nextTick(() => {
+                providers.editedItem = Object.assign({}, providers.defaultItem)
+                providers.editedIndex = -1
+            })
+        }
+        const editProv = (item) => {
+            controls.loadingOverlay = true
+            setTimeout(() => {
+                providers.editedIndex = providers.items.indexOf(item)
+                providers.editedItem = Object.assign({}, item)
+                controls.loadingOverlay = false
+                openDialogProv()
+            }, 500)
+        }
         initialize()
-        return { headers, summary, products, controls, categories, controls, openDialogProduct, closeDialogProduct, iconDialog, titleDialog, colorDialog, isEdited, editProduct, formRules, productTypes, headersProvider, titleProvDialog, colorProvDialog, iconProvDialog, providers, formProvRules }
+        return { headers, summary, products, controls, categories, controls, openDialogProduct, closeDialogProduct, iconDialog, titleDialog, colorDialog, isEdited, editProduct, formRules, productTypes, headersProvider, titleProvDialog, colorProvDialog, iconProvDialog, providers, formProvRules, openDialogProv, closeDialogProv }
     }
 }
 </script>
