@@ -4,6 +4,7 @@
       <v-app-bar-nav-icon @click.stop="openDrawer()"></v-app-bar-nav-icon>
       <v-app-bar-title v-if="!$isMobile()">Dashboard</v-app-bar-title>
       <template v-slot:append>
+        <v-btn icon="mdi-magnify" @click="openDialogSearch()"></v-btn>
         <v-btn @click="controls.darkmodeModel = !controls.darkmodeModel"
           :icon="controls.darkmodeModel ? 'mdi-weather-night' : 'mdi-weather-sunny'"></v-btn>
         <v-btn icon="mdi-cart-outline" @click="controls.drawerCart = !controls.drawerCart"></v-btn>
@@ -57,7 +58,7 @@
         <v-toolbar class="border-b" rounded="0">
           <template v-slot:extension>
             <div class="text-body-2 text-center font-weight-bold w-100">{{ `${cartProducts} ${cartProducts === 1 ?
-              'equipo' : 'equipos' }` }}</div>
+              'equipo' : 'equipos'}` }}</div>
           </template>
           <v-avatar icon="mdi-cart-outline" class="ml-4" />
           <v-toolbar-title>Mi Carrito</v-toolbar-title>
@@ -104,6 +105,32 @@
     <v-main>
       <router-view />
     </v-main>
+    <v-overlay v-model="controls.dialogSearch" content-class="w-100 bg-surface" transition="scroll-x-transition">
+      <v-form @submit.prevent="showResults()">
+        <v-toolbar>
+          <v-spacer />
+          <v-avatar rounded="circle" v-if="!$isMobile()">
+            <v-img
+              src="https://static.vecteezy.com/system/resources/previews/053/066/817/non_2x/icon-free-logo-javascript-free-png.png" />
+          </v-avatar>
+          <v-text-field density="compact" variant="outlined" label="Buscar Equipo" prepend-inner-icon="mdi-magnify"
+            hide-details single-line clearable width="600" class="mx-2"
+            @click:clear="closeDialogSearch()"></v-text-field>
+          <v-spacer />
+        </v-toolbar>
+      </v-form>
+      <div class="d-flex flex-column align-center pa-4">
+        <div class="text-h6 font-weight-bold text-medium-emphasis">Categorías Populares</div>
+        <div class="d-flex flex-wrap ga-2 pa-2">
+          <v-chip>Neonatal</v-chip>
+          <v-chip>Respiratorio</v-chip>
+          <v-chip>Laboratorio</v-chip>
+          <v-chip>Ortopédico</v-chip>
+          <v-chip>Imagenología</v-chip>
+          <v-chip>Terapéutico</v-chip>
+        </div>
+      </div>
+    </v-overlay>
   </v-app>
 </template>
 
@@ -125,9 +152,6 @@ export default {
       { title: "Buscar", icon: "mdi-magnify", href: "/search" },
       { title: "Equipos", icon: "mdi-hospital-box-outline", href: "/equipment" },
       { title: "Categorías", icon: "mdi-tag-outline", href: "/categories" },
-      { title: "Ayuda", icon: "mdi-help-circle-outline", href: "/help" },
-      { title: "Acerca de", icon: "mdi-information-variant", href: "/about" },
-      { title: "Administradores", icon: "mdi-account-cog-outline", href: "/admins" },
       { title: "Usuarios", icon: "mdi-account-multiple-outline", href: "/users" },
     ]
     const cartItems = ref([
@@ -140,6 +164,7 @@ export default {
       drawer: null,
       drawerCart: null,
       darkmodeModel: null,
+      dialogSearch: false
     })
     /** Watchers */
     watch(() => controls.darkmodeModel, (nv) => {
@@ -170,7 +195,7 @@ export default {
         controls.darkmodeModel = darkModeApp
       }
     }
-    const logout =() => {
+    const logout = () => {
       globals.$swalConfirm('Cerrar sesión', 'info', '¿Desea salir de Renta Equipo?')
         .then(result => {
           if (result.isConfirmed) {
@@ -180,12 +205,15 @@ export default {
         })
         .catch(error => globals.$toast.fire({ icon: 'error', text: 'No fue posible cerrar la sesión' }))
     }
+    const openDialogSearch = () => controls.dialogSearch = true
+    const closeDialogSearch = () => controls.dialogSearch = false
+    const showResults = () => window.location = 'search'
     const initialize = () => {
       getDarkMode()
       controls.rail = !mdAndDown.value
     }
     initialize()
-    return { cartItems, controls, logout, changeTheme, openDrawer, cartProducts, menuItems }
+    return { cartItems, controls, logout, changeTheme, openDrawer, cartProducts, menuItems, openDialogSearch, closeDialogSearch, showResults }
   }
 }
 </script>

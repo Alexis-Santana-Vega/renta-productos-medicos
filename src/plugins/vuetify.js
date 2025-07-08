@@ -103,6 +103,12 @@ export default createVuetify({
     VWindow: {
       touch: false,
     },
+    VCarousel: {
+      VBtn: {
+        size: 'x-small',
+        variant: 'flat'
+      }
+    },
     /* Defaults for feedback */
     VTabs: {
       color: 'primary',
