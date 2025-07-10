@@ -33,6 +33,10 @@ export default createVuetify({
           success: ''
           */
         },
+        variables: {
+          'box-shadow-color': '149, 157, 165',
+          'opacity-shadow': '0.2'
+        }
       },
       customDarkTheme: {
         dark: true,
@@ -48,6 +52,10 @@ export default createVuetify({
           success: ''
           */
         },
+        variables: {
+          'box-shadow-color': '149, 157, 165',
+          'opacity-shadow': '0.2'
+        }
       },
     },
   },
@@ -108,6 +116,9 @@ export default createVuetify({
         size: 'x-small',
         variant: 'flat'
       }
+    },
+    VPagination: {
+      density: 'comfortable'
     },
     /* Defaults for feedback */
     VTabs: {

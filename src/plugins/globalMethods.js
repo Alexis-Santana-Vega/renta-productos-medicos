@@ -56,6 +56,15 @@ export default {
             }
         }
 
+        app.config.globalProperties.$productOptionColor = (status) => {
+            switch(status) {
+                case 'Venta' : return 'success'
+                case 'Renta': return 'tertiary'
+                case 'Ambos': return 'secondary'
+                default: return 'primary'
+            }
+        }
+
         app.config.globalProperties.$productStatus = [
             'DISPONIBLE', 'OCUPADO', 'SUSPENDIDO'
         ]
