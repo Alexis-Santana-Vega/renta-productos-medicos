@@ -17,7 +17,7 @@
                     style="z-index: 3;">
                 </v-btn>-->
                 <!--Area de video-->
-                <qrcode-stream :constraints="selectedConstraints" :track="trackFunctionSelected.value"
+                <qrcode-stream :torch="torchActive" :constraints="selectedConstraints" :track="trackFunctionSelected.value"
                     :formats="selectedBarcodeFormats" @error="onError" @detect="onDetect" @camera-on="onCameraReady" />
                 <loading-overlay v-model="loading"></loading-overlay>
                 <!--Controles-->
@@ -33,7 +33,7 @@
                     <p class="error">{{ error }}</p>
                 </div>
                 <v-dialog :model-value="controls.dialogConfig" width="500" scrollable>
-                    <card-dialog icon="mdi-cog-outline" title="Configuración Temporal" @close="controls.dialogConfig = false">
+                    <card-dialog icon="mdi-cog-outline" title="Configuración" @close="controls.dialogConfig = false">
                         <v-row dense>
                             <v-col cols="12">
                                 <v-select v-model="trackFunctionSelected" label="Cuadro de Lectura"
