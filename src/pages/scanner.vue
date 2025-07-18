@@ -99,6 +99,7 @@ async function onCameraReady(capabilities) {
     // requesting the permissions. The `camera-on` event should guarantee that this
     // has happened.
     try {
+        loading.value = true
         const devices = await navigator.mediaDevices.enumerateDevices()
         const videoDevices = devices.filter(({ kind }) => kind === 'videoinput')
 
