@@ -65,28 +65,32 @@
                             </v-row>
                         </card-form>
                     </v-col>
-                    {{ entraces.editedItem.items }}
                     <v-col cols="12">
                         <card-form icon="mdi-hospital-box-outline" title="Equipo a Recibir">
                             <v-data-table :items="entraces.editedItem.items" :headers="headersExitDialog"
                                 items-per-page="-1" hide-default-footer>
                                 <template v-slot:item.actions="{ item }">
-                                    <btn-tooltip icon="mdi-delete-outline" :text="`Eliminar ${item.name}`" color="error" @click="deleteEquipment(item)"></btn-tooltip>
+                                    <btn-tooltip icon="mdi-delete-outline" text="Descartar entrada" color="error"
+                                        @click="deleteEquipment(item)"></btn-tooltip>
                                 </template>
                                 <template v-slot:item.product-id="{ value, index }">
-                                    <v-text-field v-model="entraces.editedItem.items[index].productId" density="compact" variant="underlined"
-                                        hide-details @keydown.enter="handleEnter($event, index)" @keydown.tab="handleEnter($event, index)"></v-text-field>
+                                    <v-text-field v-model="entraces.editedItem.items[index].productId" density="compact"
+                                        variant="underlined" hide-details @keydown.enter="handleEnter($event, index, 'productId')"
+                                        @keydown.tab="handleEnter($event, index, 'productId')"></v-text-field>
                                 </template>
                                 <template v-slot:item.name="{ value, index }">
                                     <v-text-field :model-value="value" density="compact" variant="underlined"
-                                        hide-details @keydown.enter="handleEnter($event, index)" @keydown.tab="handleEnter($event, index)"></v-text-field>
+                                        hide-details @keydown.enter="handleEnter($event, index, 'name')"
+                                        @keydown.tab="handleEnter($event, index, 'name')"></v-text-field>
                                 </template>
                                 <template v-slot:item.quantity="{ value, index }">
                                     <v-text-field :model-value="value" density="compact" variant="underlined"
-                                        hide-details @keydown.enter="handleEnter($event, index)" @keydown.tab="handleEnter($event, index)"></v-text-field>
+                                        hide-details @keydown.enter="handleEnter($event, index)"
+                                        @keydown.tab="handleEnter($event, index)"></v-text-field>
                                 </template>
                                 <template v-slot:no-data>
-                                    <btn-custom prepend-icon="mdi-plus" class="mt-4" @click="createNewRegister()">Agregar Equipo</btn-custom>
+                                    <btn-custom prepend-icon="mdi-plus" class="mt-4"
+                                        @click="createNewRegister()">Agregar Equipo</btn-custom>
                                 </template>
                             </v-data-table>
                         </card-form>
@@ -95,15 +99,27 @@
                 <v-tooltip text="Escanear Equipo">
                     <template v-slot:activator="{ props: activatorProps }">
                         <v-btn icon="mdi-barcode-scan" color="primary" size="x-large" rounded="circle"
-                    style="z-index: 1000; position: fixed; right: 16px; bottom: 16px;" v-bind="activatorProps"></v-btn>
+                            style="z-index: 1000; position: fixed; right: 16px; bottom: 16px;" v-bind="activatorProps"
+                            @click="openScanner()"></v-btn>
                     </template>
                 </v-tooltip>
-                
+                <v-tooltip text="Agregar Equipo Manualmente">
+                    <template v-slot:activator="{ props: activatorProps }">
+                        <v-btn icon="mdi-plus" color="secondary" size="x-large" rounded="circle"
+                            style="z-index: 1000; position: fixed; right: 90px; bottom: 16px;" v-bind="activatorProps"
+                            @click="createNewRegister()"></v-btn>
+                    </template>
+                </v-tooltip>
+                <v-dialog :model-value="controls.dialogScanner" persistent scrollable width="600">
+                    <scanner-picker @add-equipment="(n) => addEquipment(n)"
+                        @close-scanner="closeScanner()"></scanner-picker>
+                </v-dialog>
             </card-dialog>
         </v-dialog>
     </v-container>
 </template>
 <script>
+import { fakeApiGetUser } from '@/plugins/fakeApi';
 import { computed, getCurrentInstance, reactive, nextTick, ref } from 'vue';
 
 export default {
@@ -114,6 +130,7 @@ export default {
         const controls = reactive({
             search: '',
             dialogExit: false,
+            dialogScanner: false
         })
         const entraces = reactive({
             items: [],
@@ -174,25 +191,59 @@ export default {
                 focusable[index + position].focus()
             }
         }
-        const handleEnter = async (e, index) => {
+        const handleEnter = (e, index, field) => {
+            e.preventDefault()
+            if (field === 'productId') {
+                fakeApiGetUser(entraces.editedItem.items[index].productId)
+                    .then(result => {
+                        entraces.editedItem.items[index] = { ...result, quantity: 0 }
+                        moveFocusToNext(e.target, 1)
+                    })
+                    .catch(error => {
+                        globals.$toast.fire({ icon: 'error', text: 'Equipo no encontrado' })
+                    })
+            } else {
+                moveFocusToNext(e.target, 1)
+            }
+            /*
             if (e.key === 'Enter') {
                 e.preventDefault()
                 moveFocusToNext(e.target, 1)
             }
+            */
         }
         const handleEnterStock = async (e, index) => {
             if (e.key === 'Enter' || e.key === 'Tab') {
                 createNewRegister()
                 await nextTick()
-                    e.preventDefault()
-                    moveFocusToNext(e.target, 2)
+                e.preventDefault()
+                moveFocusToNext(e.target, 2)
             }
         }
         const handleInputType = (e) => {
             entraces.editedItem.invoiceAmount = 0
         }
 
-        return { controls, entraces, headers, openDialogExit, titleDialog, iconDialog, colorDialog, closeDialogExit, headersExitDialog, handleEnter, handleEnterStock, inputType, handleInputType, createNewRegister }
+        const openScanner = () => {
+            controls.dialogScanner = true
+        }
+
+        const closeScanner = () => {
+            controls.dialogScanner = false
+        }
+
+        const addEquipment = (n) => {
+            console.log(n)
+            entraces.editedItem.items.push(n)
+            globals.$toast.fire({ icon: 'success', text: 'Equipo agregado a la lista' })
+        }
+
+        const deleteEquipment = (item) => {
+            globals.$deleteFromArray(entraces.editedItem.items, item.productId)
+            globals.$toast.fire({ icon: 'success', text: 'Entrada descartada' })
+        }
+
+        return { controls, entraces, headers, openDialogExit, titleDialog, iconDialog, colorDialog, closeDialogExit, headersExitDialog, handleEnter, handleEnterStock, inputType, handleInputType, createNewRegister, openScanner, addEquipment, closeScanner, deleteEquipment }
     }
 }
 </script>

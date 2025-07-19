@@ -23,6 +23,7 @@ declare module 'vue' {
     PhotoPickerPreview: typeof import('./src/components/pickers/photo-picker-preview.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    ScannerPicker: typeof import('./src/components/scanner/scanner-picker.vue')['default']
     SummaryCardOne: typeof import('./src/components/summary/summary-card-one.vue')['default']
     SummaryCardThree: typeof import('./src/components/summary/summary-card-three.vue')['default']
     SummaryCardTwo: typeof import('./src/components/summary/summary-card-two.vue')['default']

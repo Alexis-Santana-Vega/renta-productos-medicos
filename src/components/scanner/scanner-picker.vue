@@ -1,98 +1,104 @@
 <template>
-    <v-dialog :model-value="true" width="500" scrollable>
-        <v-theme-provider theme="dark">
-            <v-card rounded="0" color="background" class="h-100 d-flex flex-column justify-space-center">
-                <!--Boton de flash-->
-                <div style="z-index: 3;" class="position-absolute mt-2 ml-2 d-flex flex-wrap ga-2">
-                    <v-btn icon="mdi-flash-outline" @click="torchActive = !torchActive" v-if="torchSupported">
-                    </v-btn>
-                    <v-btn icon="mdi-cog-outline" @click="controls.dialogConfig = true">
-                    </v-btn>
-                </div>
-                <!--Area
+    <v-card rounded="0" color="background" class="h-100 d-flex flex-column justify-space-center">
+        
+        <!--Area
                 <v-btn icon="mdi-flash-outline" @click="torchActive = !torchActive" class="position-absolute mt-2 ml-2"
                     style="z-index: 3;">
                 </v-btn>
                 <v-btn icon="mdi-cog-outline" @click="torchActive = !torchActive" class="position-absolute mt-6 ml-6"
                     style="z-index: 3;">
                 </v-btn>-->
-                <!--Area de video-->
-                <qrcode-stream :torch="torchActive" :constraints="selectedConstraints"
-                    :track="trackFunctionSelected.value" :formats="selectedBarcodeFormats" @error="onError"
-                    @detect="onDetect" @camera-on="onCameraReady" />
-                <loading-overlay v-model="loading"></loading-overlay>
-                <!--Controles-->
-                <div class="mx-2 mb-2">
-                    <v-tabs v-model="selectedConstraints" align-tabs="center">
-                        <v-tab v-for="(item, i) in constraintOptions" :key="i" :value="item.constraints">
-                            {{ `Camara ${i + 1}` }}
-                        </v-tab>
-                    </v-tabs>
+        <!--Area de video-->
+        <div :class="{ fullscreen: fullscreen }" ref="wrapper" @fullscreenchange="onFullscreenChange">
+            <qrcode-stream :torch="torchActive" :constraints="selectedConstraints" :track="trackFunctionSelected.value"
+            :formats="selectedBarcodeFormats" @error="onError" @detect="onDetect" @camera-on="onCameraReady">
+            <!--Boton de flash-->
+        <div style="z-index: 3;" class="position-absolute mt-2 ml-2 d-flex flex-wrap ga-2">
+            <v-btn icon="mdi-flash-outline" @click="torchActive = !torchActive" v-if="torchSupported">
+            </v-btn>
+            <v-btn icon="mdi-cog-outline" @click="controls.dialogConfig = true">
+            </v-btn>
+            <v-btn icon="mdi-close" @click="closeScanner()">
+            </v-btn>
+        </div>
+            <v-btn :icon="fullscreen ? 'mdi-fullscreen' : 'mdi-fullscreen-exit'"
+                style="position: absolute; bottom: 15px; right: 10px;" @click="fullscreen = !fullscreen"></v-btn>
+        </qrcode-stream>
+        </div>
+        
+        <loading-overlay v-model="loading" contained></loading-overlay>
+        <!--Controles-->
+        <div class="mx-2 mb-2">
+            <v-tabs v-model="selectedConstraints" align-tabs="center">
+                <v-tab v-for="(item, i) in constraintOptions" :key="i" :value="item.constraints">
+                    {{ `Camara ${i + 1}` }}
+                </v-tab>
+            </v-tabs>
+            <!--
                     <p class="decode-result">
                         Last result: <b>{{ result }}</b>
                     </p>
-                    <p class="error">{{ error }}</p>
-                </div>
-                <v-dialog :model-value="controls.dialogConfig" width="500" scrollable>
-                    <card-dialog icon="mdi-cog-outline" title="Configuración" @close="controls.dialogConfig = false">
-                        <v-row dense>
-                            <v-col cols="12">
-                                <v-select v-model="trackFunctionSelected" label="Cuadro de Lectura"
-                                    :items="trackFunctionOptions" item-value="option" item-title="text"
-                                    hide-details></v-select>
-                            </v-col>
-                            <v-col cols="12">
-                                <v-label>Código de Barras soportados: </v-label>
-                                <template v-for="option in Object.keys(barcodeFormats)" :key="option">
-                                    <v-checkbox v-model="barcodeFormats[option]" :label="option" hide-details
-                                        density="compact"></v-checkbox>
-                                </template>
-                            </v-col>
-                        </v-row>
-                        <!--
+                    -->
+            <p class="error">{{ error }}</p>
+        </div>
+        <v-dialog :model-value="controls.dialogConfig" width="500" scrollable>
+            <card-dialog icon="mdi-cog-outline" title="Configuración" @close="controls.dialogConfig = false">
+                <v-row dense>
+                    <v-col cols="12">
+                        <v-select v-model="trackFunctionSelected" label="Cuadro de Lectura"
+                            :items="trackFunctionOptions" item-value="option" item-title="text" hide-details></v-select>
+                    </v-col>
+                    <v-col cols="12">
+                        <v-label>Código de Barras soportados: </v-label>
+                        <template v-for="option in Object.keys(barcodeFormats)" :key="option">
+                            <v-checkbox v-model="barcodeFormats[option]" :label="option" hide-details
+                                density="compact"></v-checkbox>
+                        </template>
+                    </v-col>
+                </v-row>
+                <!--
                         <select v-model="trackFunctionSelected">
                             <option v-for="option in trackFunctionOptions" :key="option.text" :value="option">
                                 {{ option.text }}
                             </option>
                         </select>    
                         -->
-                    </card-dialog>
-                </v-dialog>
-                <v-dialog :model-value="controls.dialogEquipment" width="500" scrollable>
-                    <card-dialog icon="mdi-hospital-box-outline" title="Información">
-                        <card-form>
-                            <v-form @submit.prevent="">
-                                <v-row dense>
-                                <v-col cols="12" class="text-center">
-                                    <v-avatar size="64">
-                                        <v-img :src="equipment.photoUrl"></v-img>
-                                    </v-avatar>
-                                    <div class="text-body-1 font-weight-bold text-medium-emphasis my-2">{{ equipment.name }}</div>
-                                </v-col>
-                                <v-col cols="12">
-                                    <v-text-field label="Cantidad *"></v-text-field>
-                                </v-col>
-                                <v-col cols="12" class="d-flex justify-end flex-wrap ga-2">
-                                    <btn-custom variant="tonal">Cancelar</btn-custom>
-                                    <btn-custom>Agregar</btn-custom>
-                                </v-col>
-                            </v-row>
-                            </v-form>
-                        </card-form>
-                    </card-dialog>
-                </v-dialog>
-            </v-card>
-        </v-theme-provider>
-    </v-dialog>
+            </card-dialog>
+        </v-dialog>
+        <v-dialog :model-value="controls.dialogEquipment" width="500" scrollable>
+            <card-dialog icon="mdi-hospital-box-outline" title="Información">
+                <card-form>
+                    <v-form @submit.prevent="addEquipment()">
+                        <v-row dense>
+                            <v-col cols="12" class="text-center">
+                                <v-avatar size="64">
+                                    <v-img :src="equipment.photoUrl"></v-img>
+                                </v-avatar>
+                                <div class="text-body-1 font-weight-bold text-medium-emphasis my-2">{{ equipment.name }}
+                                </div>
+                            </v-col>
+                            <v-col cols="12">
+                                <v-text-field v-model="equipment.quantity" label="Cantidad *"></v-text-field>
+                            </v-col>
+                            <v-col cols="12" class="d-flex justify-end flex-wrap ga-2">
+                                <btn-custom variant="tonal">Cancelar</btn-custom>
+                                <btn-custom type="submit">Agregar</btn-custom>
+                            </v-col>
+                        </v-row>
+                    </v-form>
+                </card-form>
+            </card-dialog>
+        </v-dialog>
+    </v-card>
 </template>
 
 <script setup lang="ts">
 import { fakeApiGetUser } from '@/plugins/fakeApi'
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, watch } from 'vue'
 import { QrcodeStream } from 'vue-qrcode-reader'
 
 /** emits */
-const emit = defineEmits(['addEquipment'])
+const emit = defineEmits(['addEquipment', 'closeScanner'])
 
 /** controls */
 const controls = reactive({
@@ -100,7 +106,48 @@ const controls = reactive({
     dialogEquipment: false
 })
 
-const equipment = ref({id: '', name: '', photoUrl: ''})
+const equipment = ref({ id: '', name: '', photoUrl: '', quantity: 0 })
+
+/** fullscreen control */
+const fullscreen = ref(false)
+const wrapper = ref(null)
+
+watch(fullscreen, (enterFullscreen) => {
+    console.log(enterFullscreen)
+    if (enterFullscreen) {
+        requestFullscreen()
+    } else {
+        exitFullscreen()
+    }
+})
+
+function requestFullscreen() {
+    const elem = wrapper.value
+
+    if (!elem) return
+
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen()
+    } else if (elem.mozRequestFullScreen) {
+        elem.mozRequestFullScreen()
+    } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen()
+    } else if (elem.msRequestFullscreen) {
+        elem.msRequestFullscreen()
+    }
+}
+
+function exitFullscreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen()
+    } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen()
+    } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen()
+    } else if (document.msExitFullscreen) {
+        document.msExitFullscreen()
+    }
+}
 
 /** detection torch */
 const torchActive = ref(false)
@@ -268,8 +315,22 @@ function onError(err) {
     }
 }
 
+function onFullscreenChange(event) {
+    // This becomes important when the user doesn't use the button to exit
+    // fullscreen but hits ESC on desktop, pushes a physical back button on
+    // mobile etc.
+
+    fullscreen.value = document.fullscreenElement !== null
+}
+
 const addEquipment = () => {
     emit('addEquipment', equipment.value)
+    controls.dialogEquipment = false
+    result.value = ''
+}
+
+const closeScanner = () => {
+    emit('closeScanner')
 }
 
 </script>
@@ -284,5 +345,14 @@ const addEquipment = () => {
     margin-right: 10px;
     white-space: nowrap;
     display: inline-block;
+}
+
+.fullscreen {
+    position: fixed;
+    z-index: 5000;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
 }
 </style>
