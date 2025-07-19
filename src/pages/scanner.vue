@@ -63,6 +63,7 @@
 </template>
 
 <script setup lang="ts">
+import { fakeApiGetUser } from '@/plugins/fakeApi'
 import { ref, computed, reactive } from 'vue'
 import { QrcodeStream } from 'vue-qrcode-reader'
 
@@ -82,6 +83,9 @@ const result = ref('')
 function onDetect(detectedCodes) {
     console.log(detectedCodes)
     result.value = JSON.stringify(detectedCodes.map((code) => code.rawValue))
+    fakeApiGetUser(result.value)
+    .then(equipment => alert(equipment.name))
+    .catch(error => console.error("Error: ", error.message))
 }
 
 /*** select camera ***/
