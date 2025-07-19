@@ -17,8 +17,9 @@
                     style="z-index: 3;">
                 </v-btn>-->
                 <!--Area de video-->
-                <qrcode-stream :torch="torchActive" :constraints="selectedConstraints" :track="trackFunctionSelected.value"
-                    :formats="selectedBarcodeFormats" @error="onError" @detect="onDetect" @camera-on="onCameraReady" />
+                <qrcode-stream :torch="torchActive" :constraints="selectedConstraints"
+                    :track="trackFunctionSelected.value" :formats="selectedBarcodeFormats" @error="onError"
+                    @detect="onDetect" @camera-on="onCameraReady" />
                 <loading-overlay v-model="loading"></loading-overlay>
                 <!--Controles-->
                 <div class="mx-2 mb-2">
@@ -84,8 +85,8 @@ function onDetect(detectedCodes) {
     console.log(detectedCodes)
     result.value = JSON.stringify(detectedCodes.map((code) => code.rawValue))
     fakeApiGetUser(result.value)
-    .then(equipment => alert(equipment.name))
-    .catch(error => console.error("Error: ", error.message))
+        .then(equipment => alert(equipment.name))
+        .catch(error => console.error("Error: ", error.message))
 }
 
 /*** select camera ***/
