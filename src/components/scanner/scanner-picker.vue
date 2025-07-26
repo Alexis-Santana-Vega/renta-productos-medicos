@@ -92,7 +92,7 @@
     </v-card>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { fakeApiGetUser } from '@/plugins/fakeApi'
 import { ref, computed, reactive, watch } from 'vue'
 import { QrcodeStream } from 'vue-qrcode-reader'
@@ -157,9 +157,13 @@ const torchSupported = ref(false)
 
 const result = ref('')
 
+/** Audio Scanner */
+let audioScanner = new Audio('/src/assets/beep.mp3')
+
 function onDetect(detectedCodes) {
     // console.log(detectedCodes) // To detect Code and view info
     result.value = detectedCodes[0].rawValue.trim()
+    audioScanner.play()
     fakeApiGetUser(result.value)
         .then(result => {
             equipment.value = { ...result }
@@ -208,7 +212,11 @@ function paintOutline(detectedCodes, ctx) {
     for (const detectedCode of detectedCodes) {
         const [firstPoint, ...otherPoints] = detectedCode.cornerPoints
 
-        ctx.strokeStyle = 'red'
+        ctx.strokeStyle = 'success'
+        ctx.lineWidth = 10
+        ctx.lineJoin = 'round'
+ctx.lineCap = 'round'
+
 
         ctx.beginPath()
         ctx.moveTo(firstPoint.x, firstPoint.y)

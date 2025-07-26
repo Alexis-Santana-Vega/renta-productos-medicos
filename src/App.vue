@@ -153,6 +153,7 @@ export default {
       { title: "Equipos", icon: "mdi-hospital-box-outline", href: "/equipment" },
       { title: "Categorías", icon: "mdi-tag-outline", href: "/categories" },
       { title: "Entradas", icon: "mdi-elevator-down", href: "/entraces" },
+      { title: "Salidas", icon: "mdi-elevator-up", href: "/exits" },
       { title: "Usuarios", icon: "mdi-account-multiple-outline", href: "/users" },
     ]
     const cartItems = ref([

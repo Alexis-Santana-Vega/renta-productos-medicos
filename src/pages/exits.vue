@@ -1,12 +1,12 @@
 <template>
     <v-container fluid>
-        <card-table icon="mdi-elevator-down" title="Entradas"
-            subtitle="Registro de entradas de equipo médico hacia almacén">
+        <card-table icon="mdi-elevator-up" title="Salidas"
+            subtitle="Registro de salidas de equipo médico de almacén">
             <v-row dense>
                 <v-col cols="12" sm="12" md="6" lg="8" xl="9">
                     <iterator-header>
                         <btn-custom prepend-icon="mdi-plus" :block="$isMobile()" @click="openDialogExit()">Nueva
-                            Entrada</btn-custom>
+                            Salida</btn-custom>
                     </iterator-header>
                 </v-col>
                 <v-col cols="12" sm="12" md="6" lg="4" xl="3">
@@ -25,18 +25,21 @@
             <card-dialog :icon="iconDialog" :title="titleDialog" fullscreen @close="closeDialogExit()">
                 <v-row>
                     <v-col cols="12">
-                        <card-form icon="mdi-elevator-down" title="Recepción de Equipo">
+                        <card-form icon="mdi-elevator-up" title="Salida de Equipo">
                             <v-row dense>
-                                <v-col cols="12" sm="12" md="2" lg="2" xl="2">
+                                <v-col cols="12" sm="12" md="4" lg="4" xl="4">
+                                    <v-select v-model="entraces.editedItem.authorizeBy" label="Autorizado Por *" prepend-inner-icon="mdi-account-cog-outline"></v-select>
+                                </v-col>
+                                <v-col cols="12" sm="12" md="2" offset-md="4" lg="2" xl="2">
                                     <v-text-field v-model="entraces.editedItem.id" label="Folio"
                                         prepend-inner-icon="mdi-identifier" readonly></v-text-field>
                                 </v-col>
-                                <v-col cols="12" sm="12" md="2" offset-md="8" lg="2" xl="2">
-                                    <v-text-field v-model="entraces.editedItem.receptionDay" label="Día Recepción *"
+                                <v-col cols="12" sm="12" md="2" lg="2" xl="2">
+                                    <v-text-field v-model="entraces.editedItem.receptionDay" label="Día Salida *"
                                         prepend-inner-icon="mdi-calendar-outline" type="date" readonly></v-text-field>
                                 </v-col>
                                 <v-col cols="12" sm="12" md="4" lg="4" xl="4">
-                                    <v-select v-model="entraces.editedItem.inputType" label="Tipo de Entrada *"
+                                    <v-select v-model="entraces.editedItem.inputType" label="Tipo de Salida *"
                                         :items="inputType" @update:model-value="handleInputType"></v-select>
                                 </v-col>
                                 <template v-if="entraces.editedItem.inputType === 'TRANSFERENCIA'">
@@ -46,10 +49,16 @@
                                             prepend-inner-icon="mdi-map-marker-outline"></v-select>
                                     </v-col>
                                 </template>
-                                <template v-if="entraces.editedItem.inputType === 'COMPRA'">
+                                <template v-if="entraces.editedItem.inputType === 'VENTA'">
                                     <v-col cols="12" sm="12" md="4" lg="4" xl="4">
-                                        <v-select v-model="entraces.editedItem.providerId" label="Proveedor *"
-                                            prepend-inner-icon="mdi-handshake-outline"></v-select>
+                                        <v-select v-model="entraces.editedItem.providerId" label="Comprador *"
+                                            prepend-inner-icon="mdi-account-outline"></v-select>
+                                    </v-col>
+                                </template>
+                                <template v-if="entraces.editedItem.inputType === 'DESPERFECTO'">
+                                    <v-col cols="12" sm="12" md="4" lg="4" xl="4">
+                                        <v-select v-model="entraces.editedItem.providerId" label="Tipo de Desperfecto *"
+                                            prepend-inner-icon="mdi-alert-circle-outline"></v-select>
                                     </v-col>
                                 </template>
                                 <v-col cols="12" sm="12" md="4" lg="4" xl="4"
@@ -66,11 +75,11 @@
                         </card-form>
                     </v-col>
                     <v-col cols="12">
-                        <card-form icon="mdi-hospital-box-outline" title="Equipo a Recibir">
+                        <card-form icon="mdi-hospital-box-outline" title="Equipo a Entregar">
                             <v-data-table :items="entraces.editedItem.items" :headers="headersExitDialog"
                                 items-per-page="-1" hide-default-footer>
                                 <template v-slot:item.actions="{ item }">
-                                    <btn-tooltip icon="mdi-delete-outline" text="Descartar entrada" color="error"
+                                    <btn-tooltip icon="mdi-delete-outline" text="Descartar Salida" color="error"
                                         @click="deleteEquipment(item)"></btn-tooltip>
                                 </template>
                                 <template v-slot:item.product-id="{ value, index }">
@@ -162,8 +171,9 @@ export default {
             { key: 'quantity', title: 'Cantidad' },
         ]
         const inputType = [
-            { value: 'COMPRA', title: 'Compra' },
+            { value: 'VENTA', title: 'Venta' },
             { value: 'TRANSFERENCIA', title: 'Transferencia' },
+            { value: 'DESPERFECTO', title: 'Desperfecto' },
         ]
         /** Computed */
         const isEdited = computed(() => entraces.editedIndex !== -1)
