@@ -1,9 +1,11 @@
 <template>
     <v-container fluid>
-        <card-table title="Usuarios Sistema" :subtitle="subtitlePage"
-            icon="mdi-account-cog-outline">
+        <card-table title="Usuarios Sistema" :subtitle="subtitlePage" icon="mdi-account-cog-outline">
+            <template v-slot:append>
+                <v-btn variant="tonal" icon="mdi-cog-outline" @click="roleControls.dialog = true"></v-btn>
+            </template>
             <v-row dense>
-                <v-col cols="12" sm="12" :md="isSysAdmin ?  4 : 8" :lg="isSysAdmin ? 4 : 8" :xl="isSysAdmin ? 6 : 9">
+                <v-col cols="12" sm="12" :md="isSysAdmin ? 4 : 8" :lg="isSysAdmin ? 4 : 8" :xl="isSysAdmin ? 6 : 9">
                     <iterator-header>
                         <btn-custom prepend-icon="mdi-plus" :block="$isMobile()" @click="openDialogForm()">Nuevo
                             Usuario</btn-custom>
@@ -11,7 +13,9 @@
                 </v-col>
                 <v-col cols="12" sm="12" md="4" lg="4" xl="3" v-if="isSysAdmin">
                     <iterator-header>
-                        <v-select placeholder="Locación" single-line hide-details prepend-inner-icon="mdi-map-marker-outline" :items="locations" item-value="id" item-title="name"></v-select>
+                        <v-select v-model="controls.location" placeholder="Locación" single-line hide-details
+                            prepend-inner-icon="mdi-map-marker-outline" :items="locations" item-value="id"
+                            item-title="name" @update:model-value="handleLocation"></v-select>
                     </iterator-header>
                 </v-col>
                 <v-col cols="12" sm="12" md="4" lg="4" xl="3">
@@ -21,7 +25,11 @@
                     </iterator-header>
                 </v-col>
                 <v-col cols="12">
-                    <v-data-table :items="admins.items" :headers="headers" :search="controls.search">
+                    <v-data-table :items="admins.items" :headers="headers" :search="controls.search"
+                        :loading="controls.loadingTable">
+                        <template v-slot:loading>
+                            <v-skeleton-loader type="table-row@10"></v-skeleton-loader>
+                        </template>
                         <template v-slot:item.userName="{ value }">
                             <span class="text-caption font-weight-medium">{{ value }}</span>
                         </template>
@@ -87,10 +95,13 @@
                                     <v-col cols="12" sm="12" md="5" lg="5" xl="2">
                                         <v-select v-model="admins.editedItem.roles" label="Selecciona un rol *"
                                             prepend-inner-icon="mdi-account-cog-outline" :color="colorDialog"
-                                            :rules="formRules.roles" :items="roles" multiple chips></v-select>
+                                            :rules="formRules.roles" :items="roles" item-value="value"
+                                            item-title="title" multiple chips></v-select>
                                     </v-col>
                                     <v-col cols="12" sm="12" md="5" lg="5" xl="2">
-                                        <v-select v-model="admins.editedItem.locationId" label="Locación" :items="locations" item-value="id" item-title="name" :readonly="!isSysAdmin"></v-select>
+                                        <v-select v-model="admins.editedItem.locationId" label="Locación *"
+                                            :color="colorDialog" :items="locations" item-value="id" item-title="name"
+                                            :rules="formRules.location" :readonly="!isSysAdmin"></v-select>
                                     </v-col>
                                     <v-col cols="12" sm="12" md="2" lg="2" xl="2">
                                         <v-checkbox v-model="admins.editedItem.active" hide-details :color="colorDialog"
@@ -144,12 +155,14 @@
                                 <v-col cols="12">
                                     <v-text-field v-model="admins.passwordEditedItem.oldPassword"
                                         label="Contraseña Actual *" prepend-inner-icon="mdi-account-key-outline"
-                                        :type="controls.showPassword ? 'text' : 'password'" :rules="formRules.password"></v-text-field>
+                                        :type="controls.showPassword ? 'text' : 'password'"
+                                        :rules="formRules.password"></v-text-field>
                                 </v-col>
                                 <v-col cols="12">
                                     <v-text-field v-model="admins.passwordEditedItem.newPassword"
                                         label="Nueva Contraseña *" prepend-inner-icon="mdi-account-key-outline"
-                                        :type="controls.showPassword ? 'text' : 'password'" :rules="formRules.repPass"></v-text-field>
+                                        :type="controls.showPassword ? 'text' : 'password'"
+                                        :rules="formRules.repPass"></v-text-field>
                                 </v-col>
                                 <v-col cols="12">
                                     <v-switch v-model="controls.showPassword" label="Mostrar campos" color="primary"
@@ -159,7 +172,8 @@
                                 <v-col cols="12" class="d-flex flex-wrap ga-2 justify-end">
                                     <btn-custom variant="tonal" @click="closeDialogPassword()">Cancelar</btn-custom>
                                     <btn-custom variant="elevated" color="primary" type="submit"
-                                        :loading="controls.loadingPassword" :disabled="!controls.validPassForm">Cambiar</btn-custom>
+                                        :loading="controls.loadingPassword"
+                                        :disabled="!controls.validPassForm">Cambiar</btn-custom>
                                 </v-col>
                             </v-row>
                         </card-form>
@@ -167,28 +181,29 @@
                 </card-dialog>
             </v-dialog>
         </v-dialog>
+        <v-dialog v-model="roleControls.dialog" scrollable width="400">
+            <card-dialog title="Cambiar Rol" icon="mdi-cog-outline" @close="roleControls.dialog = false">
+                <v-select v-model="user.role" label="Seleccionar Rol *" :items="roleControls.vSelectItems"
+                    item-value="value" item-title="title" @update:model-value="handleRole"></v-select>
+            </card-dialog>
+        </v-dialog>
         <loading-overlay v-model="controls.loadingOverlay" />
     </v-container>
 </template>
 <script>
+import { fakeApiGetUsers } from '@/plugins/fakeApi';
 import { maxLength, onlyEmail, onlyNumbers, onlyPassword, required, requiredLength } from '@/plugins/globalRules';
-import { computed, getCurrentInstance, reactive, watch } from 'vue';
+import { computed, getCurrentInstance, nextTick, reactive, watch } from 'vue';
 
 export default {
     setup() {
         const { proxy } = getCurrentInstance()
         const globals = proxy
-        /* User Params */
-        const user = {
-            role: globals.$randomIndex(['sysadmin', 'admin']),
-            locationId: '1',
-            location: 'Monterrey, N.L'
-        }
-        const isSysAdmin = user.role === 'sysadmin'
         /* Data */
         const controls = reactive({
             dialogForm: false,
             dialogPassword: false,
+            loadingTable: false,
             loadingOverlay: false,
             loadingForm: false,
             loadingPassword: false,
@@ -197,14 +212,15 @@ export default {
             showPassword: false,
             validForm: false,
             validPassForm: false,
+            location: null
         })
         const admins = reactive({
             items: [],
             editedItem: {
-                id: '', locationId: null, firstName: '', lastName: '', userName: '', password: '', roles: ['cliente'], active: true, mobilePhone: '', phoneOffice: '', phoneExt: '', email: ''
+                id: '', locationId: null, firstName: '', lastName: '', userName: '', password: '', roles: ['CLIENTE'], active: true, mobilePhone: '', phoneOffice: '', phoneExt: '', email: ''
             },
             defaultItem: {
-                id: '', locationId: null, firstName: '', lastName: '', userName: '', password: '', roles: ['cliente'], active: true, mobilePhone: '', phoneOffice: '', phoneExt: '', email: ''
+                id: '', locationId: null, firstName: '', lastName: '', userName: '', password: '', roles: ['CLIENTE'], active: true, mobilePhone: '', phoneOffice: '', phoneExt: '', email: ''
             },
             passwordEditedItem: {
                 idUser: '', oldPassword: '', newPassword: ''
@@ -214,13 +230,6 @@ export default {
             },
             editedIndex: -1
         })
-        const headers = [
-            { key: 'fullName', title: 'NOMBRE', value: 'fullName' },
-            { key: 'userName', title: 'ID USUARIO', value: 'userName' },
-            { key: 'roles', title: 'ROLES' },
-            { key: 'active', title: 'ACTIVO' },
-            { key: 'actions', title: 'ACCIONES', sortable: false, align: 'end' },
-        ]
         const formRules = {
             firstName: [required('Nombre(s) requerido(s)'), maxLength(30, 'Nombre(s)')],
             lastName: [required('Apellido(s) requerido(s)'), maxLength(30, 'Apellido(s)')],
@@ -228,22 +237,48 @@ export default {
             roles: [required('Rol requerido'), requiredLength('Rol requerido')],
             password: [required('Contraseña requerida'), maxLength(30, 'Contraseña'), onlyPassword()],
             repPass: [required('Contraseña requerida'), maxLength(30, 'Contraseña'), onlyPassword()],
+            location: [required('Locación requerida'), requiredLength('Locación requerida')],
             mobilePhone: [maxLength(15, 'Tel. Móvil'), onlyNumbers('Tel. Móvil')],
             phoneOffice: [maxLength(15, 'Tel. Oficina'), onlyNumbers('Tel. Oficina')],
             phoneExt: [maxLength(15, 'Extensión'), onlyNumbers('Extensión')],
             email: [required('Email requerido'), maxLength(60, 'Email'), onlyEmail()]
         }
-        const roles = ['admin', 'cliente']
+        const roles = [
+            { value: 'ADMIN', title: 'Admin' },
+            { value: 'CLIENTE', title: 'Cliente' }
+        ]
         const locations = [
             { id: '1', name: 'Monterrey, N.L' },
             { id: '2', name: 'Apodaca, N.L' },
+            { id: '3', name: 'Santa Catarina, N.L' },
+            { id: '4', name: 'Escobedo, N.L' },
         ]
-        const subtitlePage = isSysAdmin ? 'Gestión de todos los usuarios del sistema' : `Gestión de los usuarios de: ${user.location}`
-        /* Watchers */
-        watch(() => controls.tabModel, (nv, ov) => {
-            /* API Call to pagination */
+        const headers = reactive( // Quitar reactive después
+            [
+                { key: 'fullName', title: 'NOMBRE', value: 'fullName' },
+                { key: 'userName', title: 'ID USUARIO', value: 'userName' },
+                { key: 'roles', title: 'ROLES' },
+                { key: 'active', title: 'ACTIVO' },
+                { key: 'actions', title: 'ACCIONES', sortable: false, align: 'end' },
+            ]
+        )
+        /* User Params from Javalin */
+        const user = reactive({
+            role: 'SYSADMIN',
+            locationId: '1',
+            location: 'Monterrey, N.L'
+        })
+        /* Data to render by role */
+        const roleControls = reactive({
+            dialog: false,
+            vSelectItems: [
+                { title: 'Admin de sistema', value: 'SYSADMIN' },
+                { title: 'Admin de locación (Monterrey)', value: 'ADMIN' },
+            ]
         })
         /* Computed methods */
+        const isSysAdmin = computed(() => user.role === 'SYSADMIN')
+        const subtitlePage = computed(() => isSysAdmin.value ? 'Gestión de todos los usuarios del sistema' : `Gestión de los usuarios de: ${user.location}`) // Quitar del computed despues
         const isEdited = computed(() => admins.editedIndex !== -1)
         const titleDialog = computed(() => isEdited.value ? 'Editar Usuario' : 'Nuevo Usuario')
         const iconDialog = computed(() => isEdited.value ? 'mdi-circle-edit-outline' : 'mdi-plus')
@@ -256,11 +291,6 @@ export default {
                 admins.defaultItem.locationId = user.locationId
                 admins.editedItem.locationId = user.locationId
             }
-            admins.items.splice(0, admins.items.length,
-                { id: '1', firstName: 'Alexis', lastName: 'Santana', fullName: 'Alexis Santana', userName: 'alexis.santana', mobilePhone: '', phoneOffice: '', phoneExt: '', roles: ['admin'], active: true, email: 'alexis@gmail.com', location: 'Monterrey, N.L', locationId: '1' },
-                { id: '2', firstName: 'Gerardo', lastName: 'Suarez', fullName: 'Gerardo Suarez', userName: 'gerardo.suarez', mobilePhone: '', phoneOffice: '', phoneExt: '', roles: ['admin', 'cliente'], active: true, email: 'gerardo@gmail.com', location: 'Apodaca, N.L', locationId: '2' },
-                { id: '3', firstName: 'Liz', lastName: 'Vega', fullName: 'Liz Vega', lastName: 'Cruz', userName: 'liz.vega', mobilePhone: '', phoneOffice: '', phoneExt: '', roles: ['admin'], active: false, email: 'liz@gmail.com', location: 'Monterrey, N.L', locationId: '1' }
-            )
         }
         const openDialogForm = () => {
             controls.dialogForm = true
@@ -327,10 +357,38 @@ export default {
                 globals.$toast.fire({ icon: 'success', text: 'Contraseña actualizada' })
             }, 1000)
         }
+        const handleLocation = (e) => {
+            controls.loadingTable = true
+            admins.items.length = 0
+            fakeApiGetUsers(e)
+                .then(result => {
+                    admins.items.splice(0, admins.items.length, ...result)
+                })
+                .catch(error => {
+                    // globals.$toast.fire({ icon: 'warning', text: error })
+                })
+                .finally(() => controls.loadingTable = false)
+        }
+        /* Method only used to show render. Delete this method later */
+        const handleRole = async (e) => {
+            if (e === 'SYSADMIN') {
+                headers.splice(4, 0, { key: 'location', title: 'LOCACIÓN' })
+                admins.defaultItem.locationId = null
+                admins.editedItem.locationId = null
+                admins.items.length = 0
+                controls.location = null
+            }
+            else {
+                headers.splice(4, 1)
+                admins.defaultItem.locationId = user.locationId
+                admins.editedItem.locationId = user.locationId
+                handleLocation(user.locationId)
+            }
+        }
         /*  */
         initialize()
 
-        return { headers, deleteAdmin, editAdmin, controls, admins, openDialogForm, closeDialogForm, titleDialog, iconDialog, colorDialog, roles, closeDialogPassword, openDialogPassword, isEdited, savePassword, saveAdmin, formRules, subtitlePage, isSysAdmin, locations }
+        return { headers, deleteAdmin, editAdmin, controls, admins, openDialogForm, closeDialogForm, titleDialog, iconDialog, colorDialog, roles, closeDialogPassword, openDialogPassword, isEdited, savePassword, saveAdmin, formRules, subtitlePage, isSysAdmin, locations, roleControls, user, handleRole, handleLocation }
     }
 }
 </script>

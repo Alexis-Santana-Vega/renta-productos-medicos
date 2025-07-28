@@ -1,3 +1,4 @@
+/* Datos para fake API de Scanner */
 const fakeEquipment = [
     { productId: '5012345678900', name: 'Ventiler Nat QA', photoUrl: 'https://encrypted-tbn2.gstatic.com/shopping?q=tbn:ANd9GcTkA7_5ETVLqFMvg79zbM7CMMKnXR_EFHdAqpBEgrFa-wwx7u_KB9XL8pwdTyda0fPU0io-dhbWNvP_K2g36z6kG7sPPrrHVQYiiIU_mgUrebjNXTV4gX1-mg' },
     { productId: '4006381333931', name: 'Neo Camilla v3', photoUrl: 'https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcQ4M0d9OtSE8EuxyPoLrSRioIjcnJDZFcjBTbSkiEdptI9bilNIM8F_GRXKcTL7ep76X98oltTtKruk4d02l18YB6B0EWQs3m6fw8Gc0xYQgeBFSCeevHCdc1E' },
@@ -25,4 +26,25 @@ const fakeApiGetUser = (productId) => {
     })
 }
 
-export { fakeApiGetUser }
+/* Datos para fake API de Usuarios */
+const fakeUsers = [
+    { id: '1', firstName: 'Alexis', lastName: 'Santana', fullName: 'Alexis Santana', userName: 'alexis.santana', mobilePhone: '', phoneOffice: '', phoneExt: '', roles: ['ADMIN'], active: true, email: 'alexis@gmail.com', location: 'Monterrey, N.L', locationId: '1' },
+    { id: '2', firstName: 'Gerardo', lastName: 'Suarez', fullName: 'Gerardo Suarez', userName: 'gerardo.suarez', mobilePhone: '', phoneOffice: '', phoneExt: '', roles: ['ADMIN', 'CLIENTE'], active: true, email: 'gerardo@gmail.com', location: 'Apodaca, N.L', locationId: '2' },
+    { id: '3', firstName: 'Carmen', lastName: 'Vega', fullName: 'Carmen Vega', userName: 'carmen.vega', mobilePhone: '7744110022', phoneOffice: '', phoneExt: '', roles: ['CLIENTE'], active: false, email: 'carmen@gmail.com', location: 'Santa Catarina, N.L', locationId: '3' },
+    { id: '4', firstName: 'Hector', lastName: 'Nuñez', fullName: 'Hector Nuñez', userName: 'hector.nunez', mobilePhone: '', phoneOffice: '', phoneExt: '', roles: ['CLIENTE'], active: true, email: 'hector@gmail.com', location: 'Monterrey, N.L', locationId: '1' },
+    { id: '5', firstName: 'Moises', lastName: 'Avila', fullName: 'Moises Avila', userName: 'moises.avila', mobilePhone: '1122334455', phoneOffice: '9988776655', phoneExt: '52', roles: ['CLIENTE'], active: true, email: 'marvin@gmail.com', location: 'Apodaca, N.L', locationId: '2' },
+]
+/** Simulacion API para seleccionar usuarios de la base de datos */
+const fakeApiGetUsers = (locationId) => {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            const users = fakeUsers.filter(i => i.locationId === locationId)
+            if (users.length > 0) {
+                resolve(users)
+            } else {
+                reject(new Error("Alerta de ejemplo, no hay usuarios en esta locación"))
+            }
+        }, 500)
+    })
+}
+export { fakeApiGetUser, fakeApiGetUsers }

@@ -150,6 +150,9 @@ export default createVuetify({
         }
       },
     },
+    VProgressLinear: {
+      color: 'secondary'
+    },
     /* Defaults to forms */
     VTextField: {
       variant: 'outlined',
