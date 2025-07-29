@@ -50,7 +50,14 @@
                 </card-table>
             </v-col>
             <v-col cols="12" sm="12" md="9" lg="9" xl="9">
-                <v-data-iterator :items="products" :items-per-page="6">
+                <v-data-iterator :items="products" :items-per-page="6" :loading="controls.loadingIterator">
+                    <template v-slot:loader>
+                        <v-row>
+                            <v-col v-for="i in 6" :key="i" cols="6" sm="6" md="4" lg="4" xl="4">
+                                <v-skeleton-loader type="image, heading, chip, text"></v-skeleton-loader>
+                            </v-col>
+                        </v-row>
+                    </template>
                     <template v-slot:default="{ items }">
                         <v-row dense>
                             <v-col cols="6" sm="6" md="4" lg="4" xl="4" v-for="(item, i) in items" :key="i">
@@ -109,64 +116,124 @@
                 </v-data-iterator>
             </v-col>
         </v-row>
-        <v-dialog v-model="controls.dialogProduct"></v-dialog>
+        <v-dialog v-model="controls.dialogProduct" scrollable width="1500" :fullscreen="$isMobile()">
+            <card-dialog title="Detalles" icon="mdi-hospital-box-outline" @close="closeDialogProduct()">
+                <v-row>
+                    <v-col cols="auto">
+                        <v-slide-group v-model="controls.slide" show-arrows mandatory
+                            :direction="$isMobile() ? 'horizontal' : 'vertical'"
+                            selected-class="border-b-lg border-opacity-100 border-tertiary">
+                            <v-slide-group-item v-for="(img, im) in products[0].photoUrl" :key="im"
+                                v-slot="{ isSelected, toggle, selectedClass }">
+                                <v-card height="100" width="100" rounded="0"
+                                    :class="['d-flex align-center justify-center mb-2', selectedClass]" @click="toggle">
+                                    <v-img :src="img" rounded="0"></v-img>
+                                </v-card>
+                            </v-slide-group-item>
+                        </v-slide-group>
+                    </v-col>
+                    <v-col cols="12" sm="12" md="5">
+                        <v-carousel @click.stop hide-delimiters show-arrows="hover" :height="$isMobile() ? 300 : 400">
+                            <v-carousel-item v-for="(img, im) in products[0].photoUrl" :key="im"
+                                :src="img"></v-carousel-item>
+                        </v-carousel>
+                    </v-col>
+                    <v-col cols="12" sm="12" md="5" lg="5" xl="5">
+                        <v-card>
+                            <v-card-text>
+                                <div class="text-h5 font-weight-bold">{{ products[0].name }}</div>
+                                <div class="text-body-2 font-weight-medium text-medium-emphasis">{{ products[0].brand }}</div>
+                                <div class="text-body-1 font-italic">{{ products[0].shortDescription }}</div>
+                                
+                                <v-row>
+                                    <v-col cols="12">
+                                        <v-text-field label="Cantidad de horas" prepend-icon="mdi-minus" append-icon="mdi-plus"></v-text-field>
+                                    </v-col>
+                                    <v-col cols="12">
+                                        <v-text-field label="Tiempo de Renta (horas)" prepend-icon="mdi-minus" append-icon="mdi-plus"></v-text-field>
+                                    </v-col>
+                                </v-row>
+                                <btn-custom prepend-icon="mdi-cart-arrow-down" color="success">Rentar Equipo</btn-custom>
+                                <v-divider>Opción de Compra</v-divider>
+                                <div>{{ products[0].sellingPrice }}</div>
+                                <v-row>
+                                    <v-col cols="12">
+                                        <v-text-field label="Cantidad" prepend-icon="mdi-minus" append-icon="mdi-plus"></v-text-field>
+                                    </v-col>
+                                </v-row>
+                                <btn-custom prepend-icon="mdi-cart-arrow-down" color="tertiary">Comprar Equipo</btn-custom>
+                            </v-card-text>
+                        </v-card>
+                    </v-col>
+                    <v-col cols="12">
+                        <v-expansion-panels>
+                            <v-expansion-panel>
+                                <template v-slot:title>
+                                    Descripción
+                                </template>
+                                <template v-slot:text>
+                                    {{ products[0].longDescription }}
+                                </template>
+                            </v-expansion-panel>
+                            <v-expansion-panel>
+                                <template v-slot:title>
+                                    Características
+                                </template>
+                                <template v-slot:text>
+                                    
+                                </template>
+                            </v-expansion-panel>
+                        </v-expansion-panels>
+                    </v-col>
+                </v-row>
+            </card-dialog>
+        </v-dialog>
+        <loading-overlay v-model="controls.loadingOverlay"></loading-overlay>
     </v-container>
 </template>
 <script>
-import { reactive, ref } from 'vue';
+import { fakeApiGetProductByIdOnSearch, fakeApiGetProductsBySearch } from '@/plugins/fakeApi';
+import { getCurrentInstance, reactive, ref } from 'vue';
 
 export default {
     setup() {
+        /** To uses global methods */
+        const { proxy } = getCurrentInstance()
+        const globals = proxy
+
         const products = ref([])
         const controls = reactive({
-            dialogProduct: false
+            loadingIterator: false,
+            dialogProduct: false,
+            loadingOverlay: false,
+            slide: null
         })
         const filter = reactive({
             ofert: [],
-            categories: []
+            categories: [],
+            minPrice: 0.0,
+            maxPrice: 0.0
         })
         /** Methods */
         const initialize = () => {
-            products.value = [
-                {
-                    id: '1', name: 'ThermaBath 100', price: '$ 50.00', status: 'Venta', photoUrl: [
-                        'https://www.somatechnology.com/spanish/wp-content/uploads/sites/2/2018/03/ERBE-VIO-300S-Electrobisturis-2.jpg', 'https://d17eythm3w95tp.cloudfront.net/media/1224/conversions/68389-9611056-large.webp', 'https://medgill.co.uk/cdn/shop/files/Erbecosmeticdisplay.jpg?v=1714652022&width=1946'
-                    ], brand: 'Erbe Bio', rentPrice: '$2,00.00 / día', sellingPrice: '$150,000.00',
-                },
-                {
-                    id: '2', name: 'BioSafe B2', price: '$ 250.00', status: 'Renta', photoUrl: [
-                        'https://bioap.com.mx/wp-content/uploads/2023/05/Lina-xcise-Cordless-Morcellator-2-e1686345910274.jpg', 'https://img.medicalexpo.es/images_me/photo-m2/110269-16145408.jpg'
-                    ], brand: 'BiMarks', rentPrice: '$500.00 / día', sellingPrice: '$450,000.00'
-                },
-                {
-                    id: '3', name: 'MicroScope Pro', price: '$ 400.00', status: 'Ambos', photoUrl: [
-                        'https://image.made-in-china.com/2f0j00DJYiZIRzYgpS/B2-Biosafeti-2-Esco-II-A2-Class-3-Heal-Force-Cabinets-Laboratory-Biosafety-Cabinet.webp', 'https://5.imimg.com/data5/SELLER/Default/2022/2/XU/LI/AC/132352180/pathology-products-500x500.jpg'
-                    ], brand: 'Heal Force', rentPrice: null, sellingPrice: '$40,000.00'
-                },
-                {
-                    id: '4', name: 'AutoPipette X3', price: '$ 100.00', status: 'Renta', photoUrl: [
-                        'https://images-na.ssl-images-amazon.com/images/I/51vqUoHqmKL._AC_UL495_SR435,495_.jpg', 'https://m.media-amazon.com/images/I/71pG4APOtbL._UF350,350_QL80_.jpg', 'https://www.eppendorf.com/product-media/img/global/540218/Eppendorf_Liquid-Handling_Research-plus-12-channel-pipette-epTIPS-384_Research-plus-12-channel-pipette-filling-384-well-plate_product.jpg?imwidth=540'
-                    ], brand: 'XPipe', rentPrice: '$120.00 / día', sellingPrice: null
-                },
-                {
-                    id: '5', name: 'Drager Oxylog 3000', price: '$ 100.00', status: 'Renta', photoUrl: [
-                        'https://www.draeger.com/Media/Content/Products/Default/Draeger-Oxylog-3000-plus-1-MT-5809-2008.jpg', 'https://storage.googleapis.com/avante/images/12671-1-drager-oxylog-3000.jpg'
-                    ], brand: 'Drager', rentPrice: '$200.00 / día', sellingPrice: '$50,000.00'
-                },
-                {
-                    id: '6', name: 'HoneyWell h60240 a10 Plus', price: '$ 100.00', status: 'Renta', photoUrl: [
-                        'https://m.media-amazon.com/images/I/61sIys3lxaL._UF894,1000_QL80_.jpg', 'https://www.amresupply.com/thumbnail/product/1656514/625/469/1656514-H6062A1000-Honeywell-H6062A1000-Home-HumidiPRO-Digital-Humidistat-Control-with-Outdoor-Sensor.jpg'
-                    ], brand: 'HoneyHome', rentPrice: '$120.00 / día', sellingPrice: null
-                },
-                {
-                    id: '7', name: 'Oxyflow 5L Oxygen XML', price: '$ 100.00', status: 'Renta', photoUrl: [
-                        'https://5.imimg.com/data5/SELLER/Default/2021/6/KP/DV/GP/109247365/oxyflow-5-500x500.jpg', 'https://5.imimg.com/data5/SELLER/Default/2023/6/321315275/IP/FL/SG/74865603/oxyflow-5l-zy-5af-oxygen-concentrator-500x500.jpg'
-                    ], brand: 'India Mart', rentPrice: '$2,500.00 / día', sellingPrice: '$3,000,000.00'
-                },
-            ]
+            controls.loadingIterator = true
+            fakeApiGetProductsBySearch()
+                .then(result => {
+                    products.value = result
+                })
+                .catch(error => {
+                    // globals.$toast.fire({ icon: 'warning', text: error })
+                })
+                .finally(() => controls.loadingIterator = false)
         }
         const openDialogProduct = (item) => {
-            controls.dialogProduct = true
+            controls.loadingOverlay = true
+            fakeApiGetProductByIdOnSearch()
+                .then(() => {
+                    controls.dialogProduct = true
+                })
+                .catch()
+                .finally(() => controls.loadingOverlay = false)
         }
         initialize()
         return { products, controls, openDialogProduct, filter }
