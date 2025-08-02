@@ -77,7 +77,7 @@
                                         @click="deleteEquipment(item)"></btn-tooltip>
                                 </template>
                                 <template v-slot:item.product-id="{ index }">
-                                    <v-text-field v-model="entraces.editedItem.items[index].productId" inputmode="numeric" density="compact"
+                                    <v-text-field v-model="entraces.editedItem.items[index].productId" inputmode="decimal" density="compact"
                                         variant="underlined" hide-details
                                         @keydown.enter="handleEnter($event, index, 'productId')"
                                         @keydown.tab="handleEnter($event, index, 'productId')"
