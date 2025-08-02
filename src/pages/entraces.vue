@@ -84,7 +84,7 @@
                                         @keypress="onlyIntegerNumbers"></v-text-field>
                                 </template>
                                 <template v-slot:item.quantity="{ index }">
-                                    <v-text-field v-model="entraces.editedItem.items[index].quantity" density="compact"
+                                    <v-text-field v-model="entraces.editedItem.items[index].quantity" type="number" density="compact"
                                         variant="underlined" hide-details
                                         @keydown.enter="handleEnterStock($event, index)"
                                         @keydown.tab="handleEnterStock($event, index)"
