@@ -37,30 +37,33 @@
                                 </v-col>
                                 <v-col cols="12" sm="12" md="4" lg="4" xl="4">
                                     <v-select v-model="entraces.editedItem.inputType" label="Tipo de Entrada *"
-                                        :items="inputType" @update:model-value="handleInputType"></v-select>
+                                        :items="inputType" @update:model-value="handleInputType"
+                                        :rules="formRules.inputType"></v-select>
                                 </v-col>
                                 <template v-if="entraces.editedItem.inputType === 'TRANSFERENCIA'">
                                     <v-col cols="12" sm="12" md="4" lg="4" xl="4">
                                         <v-select v-model="entraces.editedItem.originLocationId"
-                                            label="Locación de Origen *"
-                                            prepend-inner-icon="mdi-map-marker-outline"></v-select>
+                                            label="Locación de Origen *" prepend-inner-icon="mdi-map-marker-outline"
+                                            :rules="formRules.originLocation"></v-select>
                                     </v-col>
                                 </template>
                                 <template v-if="entraces.editedItem.inputType === 'COMPRA'">
                                     <v-col cols="12" sm="12" md="4" lg="4" xl="4">
                                         <v-select v-model="entraces.editedItem.providerId" label="Proveedor *"
-                                            prepend-inner-icon="mdi-handshake-outline"></v-select>
+                                            prepend-inner-icon="mdi-handshake-outline"
+                                            :rules="formRules.provider"></v-select>
                                     </v-col>
                                 </template>
                                 <v-col cols="12" sm="12" md="4" lg="4" xl="4"
                                     :offset-md="entraces.editedItem.inputType === null ? 4 : 0">
-                                    <v-text-field v-model="entraces.editedItem.invoiceAmount" type="number"
-                                        label="Monto de Factura *" prepend-inner-icon="mdi-cash" prefix="$"
-                                        :disabled="entraces.editedItem.inputType !== 'COMPRA'"></v-text-field>
+                                    <v-text-field v-model="entraces.editedItem.invoiceAmount" label="Monto de Factura *"
+                                        prepend-inner-icon="mdi-cash" prefix="$"
+                                        :disabled="entraces.editedItem.inputType !== 'COMPRA'"
+                                        :rules="formRules.invoiceAmount"></v-text-field>
                                 </v-col>
                                 <v-col cols="12" sm="12" md="12" lg="12" xl="12">
                                     <v-textarea v-model="entraces.editedItem.note" label="Nota/Descripción"
-                                        prepend-inner-icon="mdi-text-long"></v-textarea>
+                                        prepend-inner-icon="mdi-text-long" :rules="formRules.note"></v-textarea>
                                 </v-col>
                             </v-row>
                         </card-form>
@@ -73,20 +76,19 @@
                                     <btn-tooltip icon="mdi-delete-outline" text="Descartar entrada" color="error"
                                         @click="deleteEquipment(item)"></btn-tooltip>
                                 </template>
-                                <template v-slot:item.product-id="{ value, index }">
-                                    <v-text-field v-model="entraces.editedItem.items[index].productId" density="compact"
-                                        variant="underlined" hide-details @keydown.enter="handleEnter($event, index, 'productId')"
-                                        @keydown.tab="handleEnter($event, index, 'productId')"></v-text-field>
+                                <template v-slot:item.product-id="{ index }">
+                                    <v-text-field v-model="entraces.editedItem.items[index].productId" inputmode="numeric" density="compact"
+                                        variant="underlined" hide-details
+                                        @keydown.enter="handleEnter($event, index, 'productId')"
+                                        @keydown.tab="handleEnter($event, index, 'productId')"
+                                        @keypress="onlyIntegerNumbers"></v-text-field>
                                 </template>
-                                <template v-slot:item.name="{ value, index }">
-                                    <v-text-field :model-value="value" density="compact" variant="underlined"
-                                        hide-details @keydown.enter="handleEnter($event, index, 'name')"
-                                        @keydown.tab="handleEnter($event, index, 'name')"></v-text-field>
-                                </template>
-                                <template v-slot:item.quantity="{ value, index }">
-                                    <v-text-field :model-value="value" density="compact" variant="underlined"
-                                        hide-details @keydown.enter="handleEnter($event, index)"
-                                        @keydown.tab="handleEnter($event, index)"></v-text-field>
+                                <template v-slot:item.quantity="{ index }">
+                                    <v-text-field v-model="entraces.editedItem.items[index].quantity" density="compact"
+                                        variant="underlined" hide-details
+                                        @keydown.enter="handleEnterStock($event, index)"
+                                        @keydown.tab="handleEnterStock($event, index)"
+                                        @keypress="onlyIntegerNumbers"></v-text-field>
                                 </template>
                                 <template v-slot:no-data>
                                     <btn-custom prepend-icon="mdi-plus" class="mt-4"
@@ -120,6 +122,8 @@
 </template>
 <script>
 import { fakeApiGetUser } from '@/plugins/fakeApi';
+import { onlyIntegerNumbers } from '@/plugins/formatters';
+import { maxLength, required, requiredLength, onlyNumbers } from '@/plugins/globalRules';
 import { computed, getCurrentInstance, reactive, nextTick, ref } from 'vue';
 
 export default {
@@ -139,7 +143,7 @@ export default {
                 receptionDay: new Date().toISOString().slice(0, 10),
                 inputType: null,
                 note: '',
-                invoiceAmount: 0,
+                invoiceAmount: '',
                 originLocationId: null,
                 providerId: null,
                 items: []
@@ -149,6 +153,17 @@ export default {
             },
             editedIndex: -1
         })
+        const formRules = {
+            inputType: [required('Tipo de Entrada requerida'), requiredLength('Tipo de Entrada requerida')],
+            invoiceAmount: [],
+            note: [maxLength(300, 'Nota/Descripción')],
+            originLocation: [required('Locación de Origen requerida')],
+            provider: [required('Proveedor requerido')]
+        }
+        const formRulesTable = {
+            productId: [onlyNumbers('Código de Barras')],
+            quantity: [onlyNumbers('Cantidad')]
+        }
         const headers = [
             { key: 'folio', title: 'FOLIO' },
             { key: '', title: '' },
@@ -156,7 +171,7 @@ export default {
             { key: '', title: '' }
         ]
         const headersExitDialog = [
-            { key: 'actions', title: null },
+            { key: 'actions', title: null, align: 'center', width: '40' },
             { key: 'product-id', title: 'ID Producto', value: 'productId' },
             { key: 'name', title: 'Nombre Producto' },
             { key: 'quantity', title: 'Cantidad' },
@@ -179,7 +194,7 @@ export default {
                 entraces.editedIndex = -1
             })
         }
-        const createNewRegister = () => entraces.editedItem.items.push({ idProduct: '', name: '', stock: '' })
+        const createNewRegister = () => entraces.editedItem.items.push({ idProduct: '', name: '', stock: 0 })
         const moveFocusToNext = (current, position) => {
             const focusable = Array.from(
                 document.querySelectorAll(
@@ -221,7 +236,7 @@ export default {
             }
         }
         const handleInputType = (e) => {
-            entraces.editedItem.invoiceAmount = 0
+            entraces.editedItem.invoiceAmount = ''
         }
 
         const openScanner = () => {
@@ -243,7 +258,7 @@ export default {
             globals.$toast.fire({ icon: 'success', text: 'Entrada descartada' })
         }
 
-        return { controls, entraces, headers, openDialogExit, titleDialog, iconDialog, colorDialog, closeDialogExit, headersExitDialog, handleEnter, handleEnterStock, inputType, handleInputType, createNewRegister, openScanner, addEquipment, closeScanner, deleteEquipment }
+        return { controls, entraces, headers, openDialogExit, titleDialog, iconDialog, colorDialog, closeDialogExit, headersExitDialog, handleEnter, handleEnterStock, inputType, handleInputType, createNewRegister, openScanner, addEquipment, closeScanner, deleteEquipment, formRules, formRulesTable, onlyIntegerNumbers, }
     }
 }
 </script>

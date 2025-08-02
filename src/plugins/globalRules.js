@@ -41,4 +41,3 @@ export const onlyPDF = () => v => {
         ? true
         : "Solo se permiten archivos PDF";
 }
-
