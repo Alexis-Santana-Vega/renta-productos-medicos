@@ -76,7 +76,7 @@
                                     </template>
                                 </v-col>
                                 <v-col cols="12" sm="12" md="4" lg="4" xl="4">
-                                    <v-text-field v-model="entraces.editedItem.invoiceAmount" label="Monto de Factura *"
+                                    <v-text-field v-model="entraces.editedItem.invoiceAmount" label="Monto de Factura *" inputmode="decimal"
                                         prepend-inner-icon="mdi-cash" prefix="$"
                                         :disabled="entraces.editedItem.inputType !== 'COMPRA'"
                                         :rules="formRules.invoiceAmount" :readonly="isEdited" @keydown="(e) => validateNumberInput(e, entraces.editedItem.invoiceAmount)"
