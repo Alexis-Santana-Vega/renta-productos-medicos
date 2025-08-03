@@ -26,7 +26,7 @@
                         </template>
                         <template v-slot:item.input-type="{ value }">
                             <v-chip :prepend-icon="$selectIconEntrace(value)">{{ $capitalizeFirstLetter(value)
-                                }}</v-chip>
+                            }}</v-chip>
                         </template>
                         <template v-slot:item.amount="{ value }">
                             <v-icon icon="mdi-cash" color="success" class="mr-2"></v-icon>
@@ -76,11 +76,13 @@
                                     </template>
                                 </v-col>
                                 <v-col cols="12" sm="12" md="4" lg="4" xl="4">
-                                    <v-text-field v-model="entraces.editedItem.invoiceAmount" label="Monto de Factura *" inputmode="decimal"
-                                        prepend-inner-icon="mdi-cash" prefix="$"
+                                    <v-text-field v-model="entraces.editedItem.invoiceAmount" label="Monto de Factura *"
+                                        inputmode="decimal" prepend-inner-icon="mdi-cash" prefix="$"
                                         :disabled="entraces.editedItem.inputType !== 'COMPRA'"
-                                        :rules="formRules.invoiceAmount" :readonly="isEdited" @keydown="(e) => validateNumberInput(e, entraces.editedItem.invoiceAmount)"
-                                        @input="(e) => formatCurrencyInput(e, entraces.editedItem, 'invoiceAmount')" :counter="false"></v-text-field>
+                                        :rules="formRules.invoiceAmount" :readonly="isEdited"
+                                        @keydown="(e) => validateNumberInput(e, entraces.editedItem.invoiceAmount)"
+                                        @input="(e) => formatCurrencyInput(e, entraces.editedItem, 'invoiceAmount')"
+                                        :counter="false"></v-text-field>
                                 </v-col>
                                 <v-col cols="12" sm="12" md="12" lg="12" xl="12">
                                     <v-textarea v-model="entraces.editedItem.note" label="Nota/Descripción"
@@ -95,18 +97,18 @@
                             <v-data-table :items="entraces.editedItem.items" :headers="headersExitDialog"
                                 items-per-page="-1" hide-default-footer>
                                 <template v-slot:item.product-id="{ index }">
-                                    <v-text-field v-model="entraces.editedItem.items[index].productId" density="compact"
-                                        variant="underlined" hide-details
+                                    <v-text-field v-model="entraces.editedItem.items[index].productId" type="number"
+                                        density="compact" variant="underlined" hide-details
                                         @keydown.enter="handleEnter($event, index, 'productId')"
                                         @keydown.tab="handleEnter($event, index, 'productId')"
-                                        @keypress="onlyIntegerNumbers"></v-text-field>
+                                        @keypress="onlyIntegerNumbers" :rules="formRulesTable.productId"></v-text-field>
                                 </template>
                                 <template v-slot:item.quantity="{ index }">
                                     <v-text-field v-model="entraces.editedItem.items[index].quantity" type="number"
                                         min="0" density="compact" variant="underlined" hide-details
                                         @keydown.enter="handleEnterStock($event, index)"
                                         @keydown.tab="handleEnterStock($event, index)"
-                                        @keypress="onlyIntegerNumbers"></v-text-field>
+                                        @keypress="onlyIntegerNumbers" :rules="formRulesTable.quantity"></v-text-field>
                                 </template>
                                 <template v-slot:item.actions="{ item }">
                                     <btn-tooltip icon="mdi-delete-outline" text="Descartar entrada" color="error"
@@ -186,7 +188,11 @@ export default {
             invoiceAmount: [required('Monto de Factura requerido'), onlyAmount('Monto de Factura')],
             note: [maxLength(300, 'Nota/Descripción')],
             originLocation: [required('Locación de Origen requerida')],
-            provider: [required('Proveedor requerido')]
+            provider: [required('Proveedor requerido')],
+        }
+        const formRulesTable = {
+            productId: [required('Código de Barras requerido'), onlyNumbers('Código de Barras'), maxLength(30, 'Código de Barras')],
+            quantity: [required('Cantidad requerida'), onlyNumbers('Cantidad'), maxLength(30, 'Cantidad')]
         }
         const headers = [
             { key: 'id', title: 'FOLIO', sortable: false },
@@ -196,7 +202,7 @@ export default {
             { key: 'actions', title: 'ACCIONES', sortable: false, align: 'end', width: '40' }
         ]
         const headersExitDialog = [
-            { key: 'product-id', title: 'ID PRODUCTO', value: 'productId', sortable: false },
+            { key: 'product-id', title: 'CÓDIGO', value: 'productId', sortable: false },
             { key: 'name', title: 'NOMBRE', sortable: false },
             { key: 'quantity', title: 'CANTIDAD', sortable: false, width: '200' },
             { key: 'actions', title: 'ACCIONES', sortable: false, align: 'center', width: '40' },
@@ -346,7 +352,7 @@ export default {
             entraces.editedItem.invoiceAmount = addCommas(value);
         }
         initialize()
-        return { controls, entraces, headers, openDialogExit, titleDialog, iconDialog, colorDialog, closeDialogExit, headersExitDialog, handleEnter, handleEnterStock, inputType, handleInputType, createNewRegister, openScanner, addEquipment, closeScanner, deleteEquipment, formRules, onlyIntegerNumbers, providers, locationOrigins, openEntrace, isEdited, formatCurrencyInput, validateNumberInput  }
+        return { controls, entraces, headers, openDialogExit, titleDialog, iconDialog, colorDialog, closeDialogExit, headersExitDialog, handleEnter, handleEnterStock, inputType, handleInputType, createNewRegister, openScanner, addEquipment, closeScanner, deleteEquipment, formRules, onlyIntegerNumbers, providers, locationOrigins, openEntrace, isEdited, formatCurrencyInput, validateNumberInput, formRulesTable }
     }
 }
 </script>
