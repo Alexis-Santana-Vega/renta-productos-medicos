@@ -92,11 +92,12 @@
                             <v-data-table :items="entraces.editedItem.items" :headers="headersExitDialog"
                                 items-per-page="-1" hide-default-footer>
                                 <template v-slot:item.product-id="{ index }">
-                                    <v-text-field v-model="entraces.editedItem.items[index].productId" type="number" min="0"
+                                    <v-text-field v-model="entraces.editedItem.items[index].productId" type="number" min="0" 
                                         density="compact" variant="underlined" hide-details
                                         @keydown.enter="handleEnter($event, index, 'productId')"
-                                        @keydown.tab="handleEnter($event, index, 'productId')" @input="e => validateBarcodeInput(e, index)"
-                                        @keypress="onlyIntegerNumbers"></v-text-field>
+                                        @keydown.tab="handleEnter($event, index, 'productId')"
+                                        :rules="formRulesTable.productId"
+                                        ></v-text-field>
                                 </template>
                                 <template v-slot:item.quantity="{ index }">
                                     <v-text-field v-model="entraces.editedItem.items[index].quantity" type="number" min="0"
@@ -324,11 +325,8 @@ export default {
                 })
                 .finally(() => controls.loadingOverlay = false)
         }
-        const validateBarcodeInput = (e, index) => {
-            entraces.editedItem.items[index].productId = e.target.value.replace(/\D/g, '')
-        }
         initialize()
-        return { controls, entraces, headers, openDialogExit, titleDialog, iconDialog, colorDialog, closeDialogExit, headersExitDialog, handleEnter, handleEnterStock, inputType, handleInputType, createNewRegister, openScanner, addEquipment, closeScanner, deleteEquipment, formRules, formRulesTable, onlyIntegerNumbers, providers, locationOrigins, openEntrace, isEdited, validateBarcodeInput }
+        return { controls, entraces, headers, openDialogExit, titleDialog, iconDialog, colorDialog, closeDialogExit, headersExitDialog, handleEnter, handleEnterStock, inputType, handleInputType, createNewRegister, openScanner, addEquipment, closeScanner, deleteEquipment, formRules, formRulesTable, onlyIntegerNumbers, providers, locationOrigins, openEntrace, isEdited }
     }
 }
 </script>
