@@ -48,7 +48,7 @@ export default {
         }
 
         app.config.globalProperties.$productStatusColor = (status) => {
-            switch(status) {
+            switch (status) {
                 case 'DISPONIBLE': return 'success'
                 case 'OCUPADO': return 'warning'
                 case 'SUSPENDIDO': return 'error'
@@ -57,8 +57,8 @@ export default {
         }
 
         app.config.globalProperties.$productOptionColor = (status) => {
-            switch(status) {
-                case 'Venta' : return 'success'
+            switch (status) {
+                case 'Venta': return 'success'
                 case 'Renta': return 'tertiary'
                 case 'Ambos': return 'secondary'
                 default: return 'primary'
@@ -78,5 +78,17 @@ export default {
             return array[randomIndex]
         }
 
+        app.config.globalProperties.$capitalizeFirstLetter = function (str) {
+            if (!str) return ''
+            return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+        }
+
+        app.config.globalProperties.$selectIconEntrace = function(value) {
+            switch(value) {
+                case 'TRANSFERENCIA': return 'mdi-map-marker-outline'
+                case 'COMPRA': return 'mdi-handshake-outline'
+                default: return null
+            }
+        }
     }
 }
