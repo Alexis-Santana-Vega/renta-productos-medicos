@@ -95,7 +95,7 @@
                                     <v-text-field v-model="entraces.editedItem.items[index].productId" type="number" min="0"
                                         density="compact" variant="underlined" hide-details
                                         @keydown.enter="handleEnter($event, index, 'productId')"
-                                        @keydown.tab="handleEnter($event, index, 'productId')"
+                                        @keydown.tab="handleEnter($event, index, 'productId')" @input="e => validateBarcodeInput(e, index)"
                                         @keypress="onlyIntegerNumbers"></v-text-field>
                                 </template>
                                 <template v-slot:item.quantity="{ index }">
@@ -324,8 +324,11 @@ export default {
                 })
                 .finally(() => controls.loadingOverlay = false)
         }
+        const validateBarcodeInput = (e, index) => {
+            entraces.editedItem.items[index].productId = e.target.value.replace(/\D/g, '')
+        }
         initialize()
-        return { controls, entraces, headers, openDialogExit, titleDialog, iconDialog, colorDialog, closeDialogExit, headersExitDialog, handleEnter, handleEnterStock, inputType, handleInputType, createNewRegister, openScanner, addEquipment, closeScanner, deleteEquipment, formRules, formRulesTable, onlyIntegerNumbers, providers, locationOrigins, openEntrace, isEdited }
+        return { controls, entraces, headers, openDialogExit, titleDialog, iconDialog, colorDialog, closeDialogExit, headersExitDialog, handleEnter, handleEnterStock, inputType, handleInputType, createNewRegister, openScanner, addEquipment, closeScanner, deleteEquipment, formRules, formRulesTable, onlyIntegerNumbers, providers, locationOrigins, openEntrace, isEdited, validateBarcodeInput }
     }
 }
 </script>
