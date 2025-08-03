@@ -20,6 +20,15 @@ export const onlyPassword = (fieldName = 'Contraseña') =>
 export const onlyNumbers = (fieldName = 'Campo') =>
     regexMatch(/^[0-9\s()-]*$/, `${fieldName} solo debe contener números`)
 
+export const onlyAmount = (fieldName = 'Monto') => 
+    regexMatch(/^[0-9,]+(\.[0-9]{0,2})?$/, `${fieldName} inválido`)
+/**
+ * 
+ * @returns 
+ * v => !!v || 'El monto es requerido',
+                v => /^[0-9,]+(\.[0-9]{0,2})?$/.test(v) || 'Formato de moneda inválido'
+ */
+
 export const requiredFiles = () => v => v.length > 0 || 'Campo requerido'
 
 export const maxFiles = (length = 1) => v => {

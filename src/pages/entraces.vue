@@ -26,7 +26,7 @@
                         </template>
                         <template v-slot:item.input-type="{ value }">
                             <v-chip :prepend-icon="$selectIconEntrace(value)">{{ $capitalizeFirstLetter(value)
-                            }}</v-chip>
+                                }}</v-chip>
                         </template>
                         <template v-slot:item.amount="{ value }">
                             <v-icon icon="mdi-cash" color="success" class="mr-2"></v-icon>
@@ -52,7 +52,8 @@
                                 </v-col>
                                 <v-col cols="12" sm="12" md="2" offset-md="8" lg="2" xl="2">
                                     <v-text-field v-model="entraces.editedItem.datetime" type="datetime-local"
-                                        label="Día Recepción" hint="No editable" prepend-inner-icon="mdi-calendar-outline" :counter="false"
+                                        label="Día Recepción" hint="No editable"
+                                        prepend-inner-icon="mdi-calendar-outline" :counter="false"
                                         readonly></v-text-field>
                                 </v-col>
                                 <v-col cols="12" sm="12" md="4" lg="4" xl="4">
@@ -70,19 +71,21 @@
                                     <template v-else-if="entraces.editedItem.inputType === 'COMPRA'">
                                         <v-select v-model="entraces.editedItem.providerId" label="Proveedor *"
                                             prepend-inner-icon="mdi-handshake-outline" :items="providers"
-                                            item-value="providerId" item-title="name"
-                                            :rules="formRules.provider" :readonly="isEdited"></v-select>
+                                            item-value="providerId" item-title="name" :rules="formRules.provider"
+                                            :readonly="isEdited"></v-select>
                                     </template>
                                 </v-col>
                                 <v-col cols="12" sm="12" md="4" lg="4" xl="4">
                                     <v-text-field v-model="entraces.editedItem.invoiceAmount" label="Monto de Factura *"
                                         prepend-inner-icon="mdi-cash" prefix="$"
                                         :disabled="entraces.editedItem.inputType !== 'COMPRA'"
-                                        :rules="formRules.invoiceAmount" :readonly="isEdited"></v-text-field>
+                                        :rules="formRules.invoiceAmount" :readonly="isEdited" @keydown="(e) => validateNumberInput(e, entraces.editedItem.invoiceAmount)"
+                                        @input="(e) => formatCurrencyInput(e, entraces.editedItem, 'invoiceAmount')" :counter="false"></v-text-field>
                                 </v-col>
                                 <v-col cols="12" sm="12" md="12" lg="12" xl="12">
                                     <v-textarea v-model="entraces.editedItem.note" label="Nota/Descripción"
-                                        prepend-inner-icon="mdi-text-long" :rules="formRules.note" :readonly="isEdited"></v-textarea>
+                                        prepend-inner-icon="mdi-text-long" :rules="formRules.note"
+                                        :readonly="isEdited"></v-textarea>
                                 </v-col>
                             </v-row>
                         </card-form>
@@ -92,16 +95,15 @@
                             <v-data-table :items="entraces.editedItem.items" :headers="headersExitDialog"
                                 items-per-page="-1" hide-default-footer>
                                 <template v-slot:item.product-id="{ index }">
-                                    <v-text-field v-model="entraces.editedItem.items[index].productId" type="number" min="0" 
-                                        density="compact" variant="underlined" hide-details
+                                    <v-text-field v-model="entraces.editedItem.items[index].productId" density="compact"
+                                        variant="underlined" hide-details
                                         @keydown.enter="handleEnter($event, index, 'productId')"
                                         @keydown.tab="handleEnter($event, index, 'productId')"
-                                        :rules="formRulesTable.productId"
-                                        ></v-text-field>
+                                        @keypress="onlyIntegerNumbers"></v-text-field>
                                 </template>
                                 <template v-slot:item.quantity="{ index }">
-                                    <v-text-field v-model="entraces.editedItem.items[index].quantity" type="number" min="0"
-                                        density="compact" variant="underlined" hide-details
+                                    <v-text-field v-model="entraces.editedItem.items[index].quantity" type="number"
+                                        min="0" density="compact" variant="underlined" hide-details
                                         @keydown.enter="handleEnterStock($event, index)"
                                         @keydown.tab="handleEnterStock($event, index)"
                                         @keypress="onlyIntegerNumbers"></v-text-field>
@@ -139,8 +141,8 @@
 </template>
 <script>
 import { fakeApiGetEntraceById, fakeApiGetEntraces, fakeApiGetUser } from '@/plugins/fakeApi';
-import { onlyIntegerNumbers } from '@/plugins/formatters';
-import { maxLength, required, requiredLength, onlyNumbers } from '@/plugins/globalRules';
+import { onlyIntegerNumbers, validateNumberInput, formatCurrencyInput } from '@/plugins/formatters';
+import { maxLength, required, requiredLength, onlyNumbers, onlyAmount } from '@/plugins/globalRules';
 import { computed, getCurrentInstance, reactive, nextTick, ref } from 'vue';
 
 export default {
@@ -181,17 +183,10 @@ export default {
         })
         const formRules = {
             inputType: [required('Tipo de Entrada requerida'), requiredLength('Tipo de Entrada requerida')],
-            invoiceAmount: [
-                v => !!v || 'El monto es requerido',
-                v => /^[0-9,]+(\.[0-9]{0,2})?$/.test(v) || 'Formato de moneda inválido'
-            ],
+            invoiceAmount: [required('Monto de Factura requerido'), onlyAmount('Monto de Factura')],
             note: [maxLength(300, 'Nota/Descripción')],
             originLocation: [required('Locación de Origen requerida')],
             provider: [required('Proveedor requerido')]
-        }
-        const formRulesTable = {
-            productId: [onlyNumbers('Código de Barras')],
-            quantity: [onlyNumbers('Cantidad')]
         }
         const headers = [
             { key: 'id', title: 'FOLIO', sortable: false },
@@ -309,13 +304,6 @@ export default {
             controls.loadingOverlay = true
             fakeApiGetEntraceById(item.id)
                 .then(result => {
-                    /**
-                     * 
-                     * admins.editedIndex = admins.items.indexOf(item)
-                    admins.editedItem = Object.assign({}, item)
-                    controls.loadingOverlay = false
-                    openDialogForm()
-                     */
                     entraces.editedIndex = entraces.items.indexOf(item)
                     entraces.editedItem = Object.assign({}, result)
                     openDialogExit()
@@ -325,8 +313,40 @@ export default {
                 })
                 .finally(() => controls.loadingOverlay = false)
         }
+        const addCommas = (value) => {
+            // Separar parte entera y decimal
+            const parts = value.split('.');
+            let integerPart = parts[0];
+            const decimalPart = parts.length > 1 ? `.${parts[1]}` : '';
+
+            // Agregar comas cada 3 dígitos
+            integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+            return integerPart + decimalPart;
+        }
+        const formatCurrency = (event) => {
+            // Obtener el valor sin formato
+            let value = event.target.value.replace(/,/g, '');
+
+            // Verificar si el valor es válido
+            if (!value || isNaN(value)) {
+                entraces.editedItem.invoiceAmount = '';
+                return;
+            }
+
+            // Limitar a dos decimales
+            if (value.includes('.')) {
+                const parts = value.split('.');
+                if (parts[1].length > 2) {
+                    value = `${parts[0]}.${parts[1].substring(0, 2)}`;
+                }
+            }
+
+            // Formatear con comas
+            entraces.editedItem.invoiceAmount = addCommas(value);
+        }
         initialize()
-        return { controls, entraces, headers, openDialogExit, titleDialog, iconDialog, colorDialog, closeDialogExit, headersExitDialog, handleEnter, handleEnterStock, inputType, handleInputType, createNewRegister, openScanner, addEquipment, closeScanner, deleteEquipment, formRules, formRulesTable, onlyIntegerNumbers, providers, locationOrigins, openEntrace, isEdited }
+        return { controls, entraces, headers, openDialogExit, titleDialog, iconDialog, colorDialog, closeDialogExit, headersExitDialog, handleEnter, handleEnterStock, inputType, handleInputType, createNewRegister, openScanner, addEquipment, closeScanner, deleteEquipment, formRules, onlyIntegerNumbers, providers, locationOrigins, openEntrace, isEdited, formatCurrencyInput, validateNumberInput  }
     }
 }
 </script>
