@@ -26,7 +26,7 @@
                         </template>
                         <template v-slot:item.input-type="{ value }">
                             <v-chip :prepend-icon="$selectIconEntrace(value)">{{ $capitalizeFirstLetter(value)
-                            }}</v-chip>
+                                }}</v-chip>
                         </template>
                         <template v-slot:item.amount="{ value }">
                             <v-icon icon="mdi-cash" color="success" class="mr-2"></v-icon>
@@ -42,82 +42,90 @@
         </card-table>
         <v-dialog v-model="controls.dialogExit" fullscreen scrollable persistent>
             <card-dialog :icon="iconDialog" :title="titleDialog" fullscreen @close="closeDialogExit()">
-                <v-row>
-                    <v-col cols="12">
-                        <card-form icon="mdi-elevator-down" title="Recepción de Equipo">
-                            <v-row dense>
-                                <v-col cols="12" sm="12" md="2" lg="2" xl="2">
-                                    <v-text-field v-model="entraces.editedItem.id" label="Folio" hint="No editable"
-                                        prepend-inner-icon="mdi-identifier" :counter="false" readonly></v-text-field>
-                                </v-col>
-                                <v-col cols="12" sm="12" md="2" offset-md="8" lg="2" xl="2">
-                                    <v-text-field v-model="entraces.editedItem.datetime" type="datetime-local"
-                                        label="Día Recepción" hint="No editable"
-                                        prepend-inner-icon="mdi-calendar-outline" :counter="false"
-                                        readonly></v-text-field>
-                                </v-col>
-                                <v-col cols="12" sm="12" md="4" lg="4" xl="4">
-                                    <v-select v-model="entraces.editedItem.inputType" label="Tipo de Entrada *"
-                                        :items="inputType" @update:model-value="handleInputType"
-                                        :rules="formRules.inputType" :readonly="isEdited"></v-select>
-                                </v-col>
-                                <v-col cols="12" sm="12" md="4" lg="4" xl="4">
-                                    <template v-if="entraces.editedItem.inputType === 'TRANSFERENCIA'">
-                                        <v-select v-model="entraces.editedItem.originLocationId"
-                                            label="Locación de Origen *" prepend-inner-icon="mdi-map-marker-outline"
-                                            :items="locationOrigins" item-value="locationId" item-title="name"
-                                            :rules="formRules.originLocation" :readonly="isEdited"></v-select>
+                <v-form v-model="controls.validForm" @submit.prevent="console.log('Valido')">
+                    <v-row>
+                        <v-col cols="12">
+                            <card-form icon="mdi-elevator-down" title="Recepción de Equipo">
+                                <v-row dense>
+                                    <v-col cols="12" sm="12" md="2" lg="2" xl="2">
+                                        <v-text-field v-model="entraces.editedItem.id" label="Folio" hint="No editable"
+                                            prepend-inner-icon="mdi-identifier" :counter="false"
+                                            readonly></v-text-field>
+                                    </v-col>
+                                    <v-col cols="12" sm="12" md="2" offset-md="8" lg="2" xl="2">
+                                        <v-text-field v-model="entraces.editedItem.datetime" type="datetime-local"
+                                            label="Día Recepción" hint="No editable"
+                                            prepend-inner-icon="mdi-calendar-outline" :counter="false"
+                                            readonly></v-text-field>
+                                    </v-col>
+                                    <v-col cols="12" sm="12" md="4" lg="4" xl="4">
+                                        <v-select v-model="entraces.editedItem.inputType" label="Tipo de Entrada *"
+                                            :items="inputType" @update:model-value="handleInputType"
+                                            :rules="formRules.inputType" :readonly="isEdited"></v-select>
+                                    </v-col>
+                                    <v-col cols="12" sm="12" md="4" lg="4" xl="4">
+                                        <template v-if="entraces.editedItem.inputType === 'TRANSFERENCIA'">
+                                            <v-select v-model="entraces.editedItem.originLocationId"
+                                                label="Locación de Origen *" prepend-inner-icon="mdi-map-marker-outline"
+                                                :items="locationOrigins" item-value="locationId" item-title="name"
+                                                :rules="formRules.originLocation" :readonly="isEdited"></v-select>
+                                        </template>
+                                        <template v-else-if="entraces.editedItem.inputType === 'COMPRA'">
+                                            <v-select v-model="entraces.editedItem.providerId" label="Proveedor *"
+                                                prepend-inner-icon="mdi-handshake-outline" :items="providers"
+                                                item-value="providerId" item-title="name" :rules="formRules.provider"
+                                                :readonly="isEdited"></v-select>
+                                        </template>
+                                    </v-col>
+                                    <v-col cols="12" sm="12" md="4" lg="4" xl="4">
+                                        <v-text-field v-model="entraces.editedItem.invoiceAmount"
+                                            label="Monto de Factura *" inputmode="decimal" prepend-inner-icon="mdi-cash"
+                                            prefix="$" :disabled="entraces.editedItem.inputType !== 'COMPRA'"
+                                            :rules="formRules.invoiceAmount" :readonly="isEdited"
+                                            @keydown="(e) => validateNumberInput(e, entraces.editedItem.invoiceAmount)"
+                                            @input="(e) => formatCurrencyInput(e, entraces.editedItem, 'invoiceAmount')"
+                                            :counter="false"></v-text-field>
+                                    </v-col>
+                                    <v-col cols="12" sm="12" md="12" lg="12" xl="12">
+                                        <v-textarea v-model="entraces.editedItem.note" label="Nota/Descripción"
+                                            prepend-inner-icon="mdi-text-long" :rules="formRules.note"
+                                            :readonly="isEdited"></v-textarea>
+                                    </v-col>
+                                </v-row>
+                            </card-form>
+                        </v-col>
+                        <v-col cols="12">
+                            <card-form icon="mdi-hospital-box-outline" title="Equipo a Recibir">
+                                <v-data-table :items="entraces.editedItem.items" :headers="headersExitDialog"
+                                    items-per-page="-1" hide-default-footer>
+                                    <template v-slot:item.product-id="{ index }">
+                                        <v-text-field v-model="entraces.editedItem.items[index].productId" type="number"
+                                            density="compact" variant="underlined" hide-details
+                                            @keydown.enter="handleEnter($event, index, 'productId')"
+                                            @keydown.tab="handleEnter($event, index, 'productId')"
+                                            @keypress="onlyIntegerNumbers"
+                                            :rules="formRulesTable.productId"></v-text-field>
                                     </template>
-                                    <template v-else-if="entraces.editedItem.inputType === 'COMPRA'">
-                                        <v-select v-model="entraces.editedItem.providerId" label="Proveedor *"
-                                            prepend-inner-icon="mdi-handshake-outline" :items="providers"
-                                            item-value="providerId" item-title="name" :rules="formRules.provider"
-                                            :readonly="isEdited"></v-select>
+                                    <template v-slot:item.quantity="{ index }">
+                                        <v-text-field v-model="entraces.editedItem.items[index].quantity" type="number"
+                                            min="0" density="compact" variant="underlined" hide-details
+                                            @keydown.enter="handleEnterStock($event, index)"
+                                            @keydown.tab="handleEnterStock($event, index)"
+                                            @keypress="onlyIntegerNumbers"
+                                            :rules="formRulesTable.quantity"></v-text-field>
                                     </template>
-                                </v-col>
-                                <v-col cols="12" sm="12" md="4" lg="4" xl="4">
-                                    <v-text-field v-model="entraces.editedItem.invoiceAmount" label="Monto de Factura *"
-                                        inputmode="decimal" prepend-inner-icon="mdi-cash" prefix="$"
-                                        :disabled="entraces.editedItem.inputType !== 'COMPRA'"
-                                        :rules="formRules.invoiceAmount" :readonly="isEdited"
-                                        @keydown="(e) => validateNumberInput(e, entraces.editedItem.invoiceAmount)"
-                                        @input="(e) => formatCurrencyInput(e, entraces.editedItem, 'invoiceAmount')"
-                                        :counter="false"></v-text-field>
-                                </v-col>
-                                <v-col cols="12" sm="12" md="12" lg="12" xl="12">
-                                    <v-textarea v-model="entraces.editedItem.note" label="Nota/Descripción"
-                                        prepend-inner-icon="mdi-text-long" :rules="formRules.note"
-                                        :readonly="isEdited"></v-textarea>
-                                </v-col>
-                            </v-row>
-                        </card-form>
-                    </v-col>
-                    <v-col cols="12">
-                        <card-form icon="mdi-hospital-box-outline" title="Equipo a Recibir">
-                            <v-data-table :items="entraces.editedItem.items" :headers="headersExitDialog"
-                                items-per-page="-1" hide-default-footer>
-                                <template v-slot:item.product-id="{ index }">
-                                    <v-text-field v-model="entraces.editedItem.items[index].productId" type="number"
-                                        density="compact" variant="underlined" hide-details
-                                        @keydown.enter="handleEnter($event, index, 'productId')"
-                                        @keydown.tab="handleEnter($event, index, 'productId')"
-                                        @keypress="onlyIntegerNumbers" :rules="formRulesTable.productId"></v-text-field>
-                                </template>
-                                <template v-slot:item.quantity="{ index }">
-                                    <v-text-field v-model="entraces.editedItem.items[index].quantity" type="number"
-                                        min="0" density="compact" variant="underlined" hide-details
-                                        @keydown.enter="handleEnterStock($event, index)"
-                                        @keydown.tab="handleEnterStock($event, index)"
-                                        @keypress="onlyIntegerNumbers" :rules="formRulesTable.quantity"></v-text-field>
-                                </template>
-                                <template v-slot:item.actions="{ item }">
-                                    <btn-tooltip icon="mdi-delete-outline" text="Descartar entrada" color="error"
-                                        @click="deleteEquipment(item)"></btn-tooltip>
-                                </template>
-                            </v-data-table>
-                        </card-form>
-                    </v-col>
-                </v-row>
+                                    <template v-slot:item.actions="{ item }">
+                                        <btn-tooltip icon="mdi-delete-outline" text="Descartar entrada" color="error"
+                                            @click="deleteEquipment(item)"></btn-tooltip>
+                                    </template>
+                                </v-data-table>
+                            </card-form>
+                        </v-col>
+                        <v-col cols="12">
+                            <btn-custom :disabled="!controls.validForm">Generar Entrada</btn-custom>
+                        </v-col>
+                    </v-row>
+                </v-form>
                 <v-tooltip text="Escanear Equipo" v-if="!isEdited">
                     <template v-slot:activator="{ props: activatorProps }">
                         <v-btn icon="mdi-barcode-scan" color="primary" size="x-large" rounded="circle"
@@ -157,7 +165,8 @@ export default {
             dialogExit: false,
             dialogScanner: false,
             loadingTable: false,
-            loadingOverlay: false
+            loadingOverlay: false,
+            validForm: false
         })
         const entraces = reactive({
             items: [],
@@ -202,7 +211,7 @@ export default {
             { key: 'actions', title: 'ACCIONES', sortable: false, align: 'end', width: '40' }
         ]
         const headersExitDialog = [
-            { key: 'product-id', title: 'CÓDIGO', value: 'productId', sortable: false },
+            { key: 'product-id', title: 'CÓDIGO', value: 'productId', sortable: false, width: '300' },
             { key: 'name', title: 'NOMBRE', sortable: false },
             { key: 'quantity', title: 'CANTIDAD', sortable: false, width: '200' },
             { key: 'actions', title: 'ACCIONES', sortable: false, align: 'center', width: '40' },
@@ -227,7 +236,7 @@ export default {
                 entraces.editedIndex = -1
             })
         }
-        const createNewRegister = () => entraces.editedItem.items.push({ idProduct: '', name: '', quantity: 0 })
+        const createNewRegister = () => entraces.editedItem.items.push({ id: globals.$randomUUID(), idProduct: '', name: '', quantity: 0 })
         const moveFocusToNext = (current, position) => {
             const focusable = Array.from(
                 document.querySelectorAll(
@@ -262,7 +271,9 @@ export default {
         }
         const handleEnterStock = async (e, index) => {
             if (e.key === 'Enter' || e.key === 'Tab') {
-                createNewRegister()
+                if (entraces.editedItem.items.length === (index + 1)) {
+                    createNewRegister()
+                }
                 await nextTick()
                 e.preventDefault()
                 moveFocusToNext(e.target, 2)
@@ -289,7 +300,7 @@ export default {
         }
 
         const deleteEquipment = (item) => {
-            globals.$deleteFromArray(entraces.editedItem.items, item.productId)
+            globals.$deleteFromArray(entraces.editedItem.items, item.id)
             globals.$toast.fire({ icon: 'success', text: 'Entrada descartada' })
         }
 

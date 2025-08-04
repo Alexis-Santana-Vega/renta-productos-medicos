@@ -10,12 +10,21 @@ export default {
             return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c => (+c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +c / 4).toString(16).toUpperCase())
         }
 
-        app.config.globalProperties.$deleteFromArray = function (array, id) {
+        app.config.globalProperties.$deleteFromArray = function (array, id, property = 'id') {
+            const index = array.findIndex(obj => obj[property] === id)
+            if (index !== -1) {
+                array.splice(index, 1)
+            }
+        }
+        /**
+         * 
+         * app.config.globalProperties.$deleteFromArray = function (array, id) {
             const index = array.findIndex(obj => obj.id == id)
             if (index != -1) {
                 array.splice(index, 1)
             }
         }
+         */
 
         app.config.globalProperties.$toast = Swal.mixin({
             toast: true,
