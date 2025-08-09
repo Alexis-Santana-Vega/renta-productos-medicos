@@ -68,6 +68,7 @@
 import { fakeApiGetUser } from '@/plugins/fakeApi'
 import { ref, computed, reactive, watch, onMounted, onBeforeUnmount } from 'vue'
 import { QrcodeStream } from 'vue-qrcode-reader'
+import sonido from '@/assets/beep.mp3'
 
 /** Emits */
 const emit = defineEmits(['addEquipment', 'closeScanner'])
@@ -130,7 +131,7 @@ const torchSupported = ref(false)
 const result = ref('')
 
 /** Audio Scanner */
-let audioScanner = new Audio('/src/assets/beep.mp3')
+let audioScanner = new Audio(sonido)
 
 function onDetect(detectedCodes) {
     // console.log(detectedCodes) // To detect Code and view info
