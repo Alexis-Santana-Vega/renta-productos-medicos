@@ -135,8 +135,8 @@ let audioScanner = new Audio('/src/assets/beep.mp3')
 function onDetect(detectedCodes) {
     // console.log(detectedCodes) // To detect Code and view info
     result.value = detectedCodes[0].rawValue.trim()
-    isUpdate.value = true
     audioScanner.play()
+    isUpdate.value = true
     fakeApiGetUser(result.value)
         .then(result => {
             equipment.value = { ...result }
