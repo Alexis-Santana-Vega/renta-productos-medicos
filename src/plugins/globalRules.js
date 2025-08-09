@@ -50,3 +50,9 @@ export const onlyPDF = () => v => {
         ? true
         : "Solo se permiten archivos PDF";
 }
+
+export const minNumber = (number, fieldName = 'Campo') =>
+    v => (v >= number) || `${fieldName} debe ser mayor o igual a ${number}`;      
+
+export const maxNumber = (number, fieldName = 'Campo') =>
+    v => (v <= number) || `${fieldName} debe ser menor o igual a ${number}`;

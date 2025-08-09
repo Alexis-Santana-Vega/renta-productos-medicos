@@ -1,70 +1,41 @@
 <template>
-    <v-card rounded="0" color="background" class="h-100 d-flex flex-column justify-space-center">
-        
-        <!--Area
-                <v-btn icon="mdi-flash-outline" @click="torchActive = !torchActive" class="position-absolute mt-2 ml-2"
-                    style="z-index: 3;">
-                </v-btn>
-                <v-btn icon="mdi-cog-outline" @click="torchActive = !torchActive" class="position-absolute mt-6 ml-6"
-                    style="z-index: 3;">
-                </v-btn>-->
-        <!--Area de video-->
-        <div :class="{ fullscreen: fullscreen }" ref="wrapper" @fullscreenchange="onFullscreenChange">
+    <v-card color="background" class="h-100 d-flex flex-column">
+        <div :class="{ fullscreen: fullscreen }" ref="wrapper" @fullscreenchange="onFullscreenChange"
+            style="overflow: hidden;">
             <qrcode-stream :torch="torchActive" :constraints="selectedConstraints" :track="trackFunctionSelected.value"
-            :formats="selectedBarcodeFormats" @error="onError" @detect="onDetect" @camera-on="onCameraReady">
-            <!--Boton de flash-->
-        <div style="z-index: 3;" class="position-absolute mt-2 ml-2 d-flex flex-wrap ga-2">
-            <v-btn icon="mdi-flash-outline" @click="torchActive = !torchActive" v-if="torchSupported">
-            </v-btn>
-            <v-btn icon="mdi-cog-outline" @click="controls.dialogConfig = true">
-            </v-btn>
-            <v-btn icon="mdi-close" @click="closeScanner()">
-            </v-btn>
+                :formats="selectedBarcodeFormats" @error="onError" @detect="onDetect" @camera-on="onCameraReady">
+                <!--Boton de flash-->
+                <div style="z-index: 3;" class="position-absolute mt-2 ml-2 d-flex flex-wrap ga-2">
+                    <v-btn icon="mdi-flash-outline" @click="torchActive = !torchActive" v-if="torchSupported">
+                    </v-btn>
+                    <v-btn icon="mdi-close" @click="closeScanner()">
+                    </v-btn>
+                </div>
+                <v-btn :icon="fullscreen ? 'mdi-fullscreen' : 'mdi-fullscreen-exit'"
+                    :style="`position: absolute; bottom: ${fullscreen ? '10' : '20'}px; right: 10px; z-index: 3;`"
+                    @click="fullscreen = !fullscreen"></v-btn>
+                <div class="h-100 w-100 d-flex align-center justify-center overlay pb-4">
+                    <div class="scanner">
+                        <div class="corner top-left" :class="{ 'scan-line-highlight': isUpdate }"></div>
+                        <div class="corner top-right" :class="{ 'scan-line-highlight': isUpdate }"></div>
+                        <div class="corner bottom-left" :class="{ 'scan-line-highlight': isUpdate }"></div>
+                        <div class="corner bottom-right" :class="{ 'scan-line-highlight': isUpdate }"></div>
+                        <div class="scan-line"></div>
+                    </div>
+                </div>
+            </qrcode-stream>
         </div>
-            <v-btn :icon="fullscreen ? 'mdi-fullscreen' : 'mdi-fullscreen-exit'"
-                style="position: absolute; bottom: 15px; right: 10px;" @click="fullscreen = !fullscreen"></v-btn>
-        </qrcode-stream>
-        </div>
-        
-        <loading-overlay v-model="loading" contained></loading-overlay>
         <!--Controles-->
-        <div class="mx-2 mb-2">
+        <div class="position-relative mt-n2 pa-2 bg-surface" style="overflow: hidden;">
             <v-tabs v-model="selectedConstraints" align-tabs="center">
                 <v-tab v-for="(item, i) in constraintOptions" :key="i" :value="item.constraints">
                     {{ `Camara ${i + 1}` }}
                 </v-tab>
             </v-tabs>
-            <!--
-                    <p class="decode-result">
-                        Last result: <b>{{ result }}</b>
-                    </p>
-                    -->
-            <p class="error">{{ error }}</p>
+            <v-alert color="warning" variant="tonal" class="text-center text-body-2 mt-2"
+                icon="mdi-alert-circle-outline" v-if="error">{{ error
+                }}</v-alert>
         </div>
-        <v-dialog :model-value="controls.dialogConfig" width="500" scrollable>
-            <card-dialog icon="mdi-cog-outline" title="Configuración" @close="controls.dialogConfig = false">
-                <v-row dense>
-                    <v-col cols="12">
-                        <v-select v-model="trackFunctionSelected" label="Cuadro de Lectura"
-                            :items="trackFunctionOptions" item-value="option" item-title="text" hide-details></v-select>
-                    </v-col>
-                    <v-col cols="12">
-                        <v-label>Código de Barras soportados: </v-label>
-                        <template v-for="option in Object.keys(barcodeFormats)" :key="option">
-                            <v-checkbox v-model="barcodeFormats[option]" :label="option" hide-details
-                                density="compact"></v-checkbox>
-                        </template>
-                    </v-col>
-                </v-row>
-                <!--
-                        <select v-model="trackFunctionSelected">
-                            <option v-for="option in trackFunctionOptions" :key="option.text" :value="option">
-                                {{ option.text }}
-                            </option>
-                        </select>    
-                        -->
-            </card-dialog>
-        </v-dialog>
         <v-dialog :model-value="controls.dialogEquipment" width="500" scrollable>
             <card-dialog icon="mdi-hospital-box-outline" title="Información">
                 <card-form>
@@ -89,26 +60,27 @@
                 </card-form>
             </card-dialog>
         </v-dialog>
+        <loading-overlay v-model="loading" contained></loading-overlay>
     </v-card>
 </template>
 
 <script setup>
 import { fakeApiGetUser } from '@/plugins/fakeApi'
-import { ref, computed, reactive, watch } from 'vue'
+import { ref, computed, reactive, watch, onMounted, onBeforeUnmount } from 'vue'
 import { QrcodeStream } from 'vue-qrcode-reader'
 
-/** emits */
+/** Emits */
 const emit = defineEmits(['addEquipment', 'closeScanner'])
 
-/** controls */
+/** Data ***/
+/** Controls */
 const controls = reactive({
-    dialogConfig: false,
     dialogEquipment: false
 })
-
+const isUpdate = ref(false)
 const equipment = ref({ id: '', name: '', photoUrl: '', quantity: 0 })
 
-/** fullscreen control */
+/** Fullscreen Controls */
 const fullscreen = ref(false)
 const wrapper = ref(null)
 
@@ -149,11 +121,11 @@ function exitFullscreen() {
     }
 }
 
-/** detection torch */
+/** Detection torch */
 const torchActive = ref(false)
 const torchSupported = ref(false)
 
-/*** detection handling ***/
+/*** Detection handling ***/
 
 const result = ref('')
 
@@ -163,6 +135,7 @@ let audioScanner = new Audio('/src/assets/beep.mp3')
 function onDetect(detectedCodes) {
     // console.log(detectedCodes) // To detect Code and view info
     result.value = detectedCodes[0].rawValue.trim()
+    isUpdate.value = true
     audioScanner.play()
     fakeApiGetUser(result.value)
         .then(result => {
@@ -170,6 +143,7 @@ function onDetect(detectedCodes) {
             controls.dialogEquipment = true
         })
         .catch(error => console.error("Error: ", error.message))
+        .finally(() => isUpdate.value = false)
 }
 
 /*** select camera ***/
@@ -207,68 +181,22 @@ async function onCameraReady(capabilities) {
 }
 
 /*** track functons ***/
-
-function paintOutline(detectedCodes, ctx) {
-    for (const detectedCode of detectedCodes) {
-        const [firstPoint, ...otherPoints] = detectedCode.cornerPoints
-
-        ctx.strokeStyle = 'success'
-        ctx.lineWidth = 10
-        ctx.lineJoin = 'round'
-ctx.lineCap = 'round'
-
-
-        ctx.beginPath()
-        ctx.moveTo(firstPoint.x, firstPoint.y)
-        for (const { x, y } of otherPoints) {
-            ctx.lineTo(x, y)
-        }
-        ctx.lineTo(firstPoint.x, firstPoint.y)
-        ctx.closePath()
-        ctx.stroke()
-    }
-}
-function paintBoundingBox(detectedCodes, ctx) {
+const paintCustom = (detectedCodes, ctx) => {
+    console.log(detectedCodes)
+    console.log(ctx)
     for (const detectedCode of detectedCodes) {
         const {
             boundingBox: { x, y, width, height }
         } = detectedCode
 
         ctx.lineWidth = 2
-        ctx.strokeStyle = '#007bff'
+        ctx.strokeStyle = '#FFFFFF'
         ctx.strokeRect(x, y, width, height)
     }
 }
-function paintCenterText(detectedCodes, ctx) {
-    for (const detectedCode of detectedCodes) {
-        const { boundingBox, rawValue } = detectedCode
+const trackFunctionSelected = ref({ text: 'Custom Track', value: paintCustom })
 
-        const centerX = boundingBox.x + boundingBox.width / 2
-        const centerY = boundingBox.y + boundingBox.height / 2
-
-        const fontSize = Math.max(12, (50 * boundingBox.width) / ctx.canvas.width)
-
-        ctx.font = `bold ${fontSize}px sans-serif`
-        ctx.textAlign = 'center'
-
-        ctx.lineWidth = 3
-        ctx.strokeStyle = '#35495e'
-        ctx.strokeText(detectedCode.rawValue, centerX, centerY)
-
-        ctx.fillStyle = '#5cb984'
-        ctx.fillText(rawValue, centerX, centerY)
-    }
-}
-const trackFunctionOptions = [
-    { text: 'nothing (default)', value: undefined },
-    { text: 'outline', value: paintOutline },
-    { text: 'centered text', value: paintCenterText },
-    { text: 'bounding box', value: paintBoundingBox }
-]
-const trackFunctionSelected = ref(trackFunctionOptions[1])
-
-/*** barcode formats ***/
-
+/*** Formatos de codigos ***/
 const barcodeFormats = ref({
     // aztec: false,
     code_128: true,
@@ -296,65 +224,49 @@ const selectedBarcodeFormats = computed(() => {
     return Object.keys(barcodeFormats.value).filter((format) => barcodeFormats.value[format])
 })
 
-/*** error handling ***/
-
+/*** Manejo de errores ***/
 const error = ref('')
-
+/** Función modificada de la original de la documentación */
 function onError(err) {
     error.value = `[${err.name}]: `
-
     if (err.name === 'NotAllowedError') {
-        error.value += 'you need to grant camera access permission'
+        error.value = 'Por favor, permite el acceso a la cámara.'
     } else if (err.name === 'NotFoundError') {
-        error.value += 'no camera on this device'
-    } else if (err.name === 'NotSupportedError') {
-        error.value += 'secure context required (HTTPS, localhost)'
+        error.value = 'No se encontró cámara en tu dispositivo.'
+    } else if (err.name === 'NotSupportedError' || err.name === 'InsecureContextError') {
+        error.value = 'Esta función requiere una conexión segura (usa HTTPS).'
     } else if (err.name === 'NotReadableError') {
-        error.value += 'is the camera already in use?'
+        error.value = 'No se puede usar la cámara. ¿Está en uso por otra app?'
     } else if (err.name === 'OverconstrainedError') {
-        error.value += 'installed cameras are not suitable'
+        error.value = 'Tu cámara no es compatible.'
     } else if (err.name === 'StreamApiNotSupportedError') {
-        error.value += 'Stream API is not supported in this browser'
-    } else if (err.name === 'InsecureContextError') {
-        error.value +=
-            'Camera access is only permitted in secure context. Use HTTPS or localhost rather than HTTP.'
+        error.value = 'Tu navegador no permite usar la cámara.'
     } else {
-        error.value += err.message
+        // Mensaje para errores no controlados
+        error.value = 'Ocurrió un error al intentar acceder a la cámara.'
     }
 }
 
+/*** Manejo de las funciones de pantalla completa ***/
 function onFullscreenChange(event) {
     // This becomes important when the user doesn't use the button to exit
     // fullscreen but hits ESC on desktop, pushes a physical back button on
     // mobile etc.
-
     fullscreen.value = document.fullscreenElement !== null
 }
 
+/*** Manejo de eventos posterior a escaneo del código de barras ***/
 const addEquipment = () => {
     emit('addEquipment', equipment.value)
     controls.dialogEquipment = false
     result.value = ''
 }
-
 const closeScanner = () => {
     emit('closeScanner')
 }
-
 </script>
 
 <style scoped>
-.error {
-    font-weight: bold;
-    color: red;
-}
-
-.barcode-format-checkbox {
-    margin-right: 10px;
-    white-space: nowrap;
-    display: inline-block;
-}
-
 .fullscreen {
     position: fixed;
     z-index: 5000;
@@ -362,5 +274,110 @@ const closeScanner = () => {
     bottom: 0;
     right: 0;
     left: 0;
+}
+
+.scan-line {
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(to right, transparent 0%, white 20%, white 80%, transparent 100%);
+    top: 0;
+    animation: scan 8s ease-in-out infinite;
+}
+
+@keyframes scan {
+
+    0%,
+    100% {
+        top: 0%;
+    }
+
+    50% {
+        top: 100%;
+    }
+}
+
+.overlay {
+    position: absolute;
+}
+
+.overlay::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 80%;
+    height: 70%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    margin: 0px 0px 0px 0px;
+    margin-top: -8px;
+    border: 1px solid rgba(255, 255, 255, .3);
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+.scanner {
+    position: absolute;
+    width: 80%;
+    height: 70%;
+    overflow: hidden;
+}
+
+.corner {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border: 3px solid rgba(255, 255, 255, 1);
+}
+
+.top-left {
+    top: 0;
+    left: 0;
+    border-right: none;
+    border-bottom: none;
+}
+
+.top-right {
+    top: 0;
+    right: 0;
+    border-left: none;
+    border-bottom: none;
+}
+
+.bottom-left {
+    bottom: 0;
+    left: 0;
+    border-right: none;
+    border-top: none;
+}
+
+.bottom-right {
+    bottom: 0;
+    right: 0;
+    border-left: none;
+    border-top: none;
+}
+
+.scan-line-highlight {
+    animation: cornerFlash .3s ease-out;
+}
+
+@keyframes cornerFlash {
+    0% {
+        width: 40px;
+        height: 40px;
+        border-width: 5px;
+    }
+    50% {
+        width: 0px;
+        height: 0px;
+        border-width: 5px;
+    }
+    100% {
+        width: 40px;
+        height: 40px;
+        border-width: 5px;
+    }
 }
 </style>

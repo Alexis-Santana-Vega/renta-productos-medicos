@@ -97,32 +97,36 @@
                         <v-col cols="12">
                             <card-form icon="mdi-hospital-box-outline" title="Equipo a Recibir">
                                 <v-data-table :items="entraces.editedItem.items" :headers="headersExitDialog"
-                                    items-per-page="-1" hide-default-footer>
+                                    items-per-page="-1" hide-default-footer fixed-header>
                                     <template v-slot:item.product-id="{ index }">
-                                        <v-text-field v-model="entraces.editedItem.items[index].productId" type="number"
-                                            density="compact" variant="underlined" hide-details
+                                        <v-text-field v-model="entraces.editedItem.items[index].productId"
+                                            inputmode="numeric" density="compact" variant="underlined" hide-details
                                             @keydown.enter="handleEnter($event, index, 'productId')"
                                             @keydown.tab="handleEnter($event, index, 'productId')"
                                             @keypress="onlyIntegerNumbers"
-                                            :rules="formRulesTable.productId"></v-text-field>
+                                            :ref="el => setInputRef(index, 'productId', el)"
+                                            :rules="formRulesTable.productId" :readonly="isEdited || entraces.editedItem.items[index].codeValid"
+                                            :prepend-icon="entraces.editedItem.items[index].codeValid ? 'mdi-check-circle-outline' : 'mdi-alert-circle-outline'">
+                                        </v-text-field>
                                     </template>
                                     <template v-slot:item.quantity="{ index }">
                                         <v-text-field v-model="entraces.editedItem.items[index].quantity" type="number"
-                                            min="0" density="compact" variant="underlined" hide-details
+                                            min="1" density="compact" variant="underlined" hide-details
                                             @keydown.enter="handleEnterStock($event, index)"
                                             @keydown.tab="handleEnterStock($event, index)"
                                             @keypress="onlyIntegerNumbers"
-                                            :rules="formRulesTable.quantity"></v-text-field>
+                                            :ref="el => setInputRef(index, 'quantity', el)"
+                                            :rules="formRulesTable.quantity" :readonly="isEdited"></v-text-field>
                                     </template>
                                     <template v-slot:item.actions="{ item }">
                                         <btn-tooltip icon="mdi-delete-outline" text="Descartar entrada" color="error"
-                                            @click="deleteEquipment(item)"></btn-tooltip>
+                                            @click="deleteEquipment(item)" :disabled="isEdited"></btn-tooltip>
                                     </template>
                                 </v-data-table>
                             </card-form>
                         </v-col>
-                        <v-col cols="12">
-                            <btn-custom :disabled="!controls.validForm">Generar Entrada</btn-custom>
+                        <v-col cols="12" v-if="!isEdited">
+                            <btn-custom :disabled="!isValidForm">Generar Entrada</btn-custom>
                         </v-col>
                     </v-row>
                 </v-form>
@@ -152,7 +156,7 @@
 <script>
 import { fakeApiGetEntraceById, fakeApiGetEntraces, fakeApiGetUser } from '@/plugins/fakeApi';
 import { onlyIntegerNumbers, validateNumberInput, formatCurrencyInput } from '@/plugins/formatters';
-import { maxLength, required, requiredLength, onlyNumbers, onlyAmount } from '@/plugins/globalRules';
+import { maxLength, required, requiredLength, onlyNumbers, onlyAmount, minLength, minNumber, maxNumber } from '@/plugins/globalRules';
 import { computed, getCurrentInstance, reactive, nextTick, ref } from 'vue';
 
 export default {
@@ -201,7 +205,7 @@ export default {
         }
         const formRulesTable = {
             productId: [required('Código de Barras requerido'), onlyNumbers('Código de Barras'), maxLength(30, 'Código de Barras')],
-            quantity: [required('Cantidad requerida'), onlyNumbers('Cantidad'), maxLength(30, 'Cantidad')]
+            quantity: [required('Cantidad requerida'), onlyNumbers('Cantidad'), minNumber(1, 'Cantidad'), maxNumber(30, 'Cantidad')]
         }
         const headers = [
             { key: 'id', title: 'FOLIO', sortable: false },
@@ -222,11 +226,34 @@ export default {
         ]
         const providers = []
         const locationOrigins = []
+
+        const inputRefs = ref({})
+
+        // Guardar refs por fila y campo
+        const setInputRef = (index, field, el) => {
+            if (!inputRefs.value[index]) inputRefs.value[index] = {}
+            inputRefs.value[index][field] = el
+        }
+
+        // Enfocar un campo específico
+        const focusInput = async (index, field) => {
+            await nextTick()
+            inputRefs.value[index]?.[field]?.focus()
+        }
+
         /** Computed */
         const isEdited = computed(() => entraces.editedIndex !== -1)
         const titleDialog = computed(() => isEdited.value ? 'Ver Entrada' : 'Nueva Entrada')
         const iconDialog = computed(() => isEdited.value ? 'mdi-eye-outline' : 'mdi-plus')
         const colorDialog = computed(() => isEdited.value ? 'secondary' : 'primary')
+        const isValidForm = computed(() => {
+            const length = entraces.editedItem.items.length > 0
+            let codeValid = false
+            if (length) {
+                codeValid = entraces.editedItem.items.every(i => i.codeValid === true)
+            }
+            return controls.validForm && length && codeValid
+        })
         /** Methods */
         const openDialogExit = () => controls.dialogExit = true
         const closeDialogExit = () => {
@@ -236,38 +263,21 @@ export default {
                 entraces.editedIndex = -1
             })
         }
-        const createNewRegister = () => entraces.editedItem.items.push({ id: globals.$randomUUID(), idProduct: '', name: '', quantity: 0 })
-        const moveFocusToNext = (current, position) => {
-            const focusable = Array.from(
-                document.querySelectorAll(
-                    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-                )
-            ).filter(el => !el.disabled && el.tabIndex >= 0)
-            const index = focusable.indexOf(current)
-            if (index > -1 && index < focusable.length - 1) {
-                focusable[index + position].focus()
-            }
-        }
+        const createNewRegister = () => entraces.editedItem.items.push({ id: globals.$randomUUID(), idProduct: '', name: '', quantity: 1, codeValid: false })
         const handleEnter = (e, index, field) => {
             e.preventDefault()
             if (field === 'productId') {
                 fakeApiGetUser(entraces.editedItem.items[index].productId)
-                    .then(result => {
-                        entraces.editedItem.items[index] = { ...result, quantity: 0 }
-                        moveFocusToNext(e.target, 1)
+                    .then(async result => {
+                        entraces.editedItem.items[index] = { ...result, quantity: 1, codeValid: true }
+                        await nextTick()
+                        focusInput(index, 'quantity')
                     })
                     .catch(error => {
                         globals.$toast.fire({ icon: 'error', text: 'Equipo no encontrado' })
+                        Object.assign(entraces.editedItem.items[index], { productId: '', name: '', quantity: 1, codeValid: false })
                     })
-            } else {
-                moveFocusToNext(e.target, 1)
             }
-            /*
-            if (e.key === 'Enter') {
-                e.preventDefault()
-                moveFocusToNext(e.target, 1)
-            }
-            */
         }
         const handleEnterStock = async (e, index) => {
             if (e.key === 'Enter' || e.key === 'Tab') {
@@ -276,7 +286,7 @@ export default {
                 }
                 await nextTick()
                 e.preventDefault()
-                moveFocusToNext(e.target, 2)
+                focusInput(index + 1, 'productId')
             }
         }
         const handleInputType = (e) => {
@@ -330,40 +340,8 @@ export default {
                 })
                 .finally(() => controls.loadingOverlay = false)
         }
-        const addCommas = (value) => {
-            // Separar parte entera y decimal
-            const parts = value.split('.');
-            let integerPart = parts[0];
-            const decimalPart = parts.length > 1 ? `.${parts[1]}` : '';
-
-            // Agregar comas cada 3 dígitos
-            integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-
-            return integerPart + decimalPart;
-        }
-        const formatCurrency = (event) => {
-            // Obtener el valor sin formato
-            let value = event.target.value.replace(/,/g, '');
-
-            // Verificar si el valor es válido
-            if (!value || isNaN(value)) {
-                entraces.editedItem.invoiceAmount = '';
-                return;
-            }
-
-            // Limitar a dos decimales
-            if (value.includes('.')) {
-                const parts = value.split('.');
-                if (parts[1].length > 2) {
-                    value = `${parts[0]}.${parts[1].substring(0, 2)}`;
-                }
-            }
-
-            // Formatear con comas
-            entraces.editedItem.invoiceAmount = addCommas(value);
-        }
         initialize()
-        return { controls, entraces, headers, openDialogExit, titleDialog, iconDialog, colorDialog, closeDialogExit, headersExitDialog, handleEnter, handleEnterStock, inputType, handleInputType, createNewRegister, openScanner, addEquipment, closeScanner, deleteEquipment, formRules, onlyIntegerNumbers, providers, locationOrigins, openEntrace, isEdited, formatCurrencyInput, validateNumberInput, formRulesTable }
+        return { controls, entraces, headers, openDialogExit, titleDialog, iconDialog, colorDialog, closeDialogExit, headersExitDialog, handleEnter, handleEnterStock, inputType, handleInputType, createNewRegister, openScanner, addEquipment, closeScanner, deleteEquipment, formRules, onlyIntegerNumbers, providers, locationOrigins, openEntrace, isEdited, formatCurrencyInput, validateNumberInput, formRulesTable, isValidForm, setInputRef }
     }
 }
 </script>
