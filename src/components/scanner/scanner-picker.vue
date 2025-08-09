@@ -36,10 +36,10 @@
                 icon="mdi-alert-circle-outline" v-if="error">{{ error
                 }}</v-alert>
         </div>
-        <v-dialog :model-value="controls.dialogEquipment" width="500" scrollable>
-            <card-dialog icon="mdi-hospital-box-outline" title="Información">
+        <v-dialog :model-value="controls.dialogEquipment" width="500" scrollable persistent>
+            <card-dialog icon="mdi-hospital-box-outline" title="Información" @close="closeDialog()">
                 <card-form>
-                    <v-form @submit.prevent="addEquipment()">
+                    <v-form v-model="controls.valid" @submit.prevent="addEquipment()">
                         <v-row dense>
                             <v-col cols="12" class="text-center">
                                 <v-avatar size="64">
@@ -49,11 +49,12 @@
                                 </div>
                             </v-col>
                             <v-col cols="12">
-                                <v-text-field v-model="equipment.quantity" label="Cantidad *"></v-text-field>
+                                <v-text-field v-model="equipment.quantity" label="Cantidad *" type="number" min="1"
+                                    :rules="formRules.quantity" @keypress="onlyIntegerNumbers"></v-text-field>
                             </v-col>
                             <v-col cols="12" class="d-flex justify-end flex-wrap ga-2">
-                                <btn-custom variant="tonal">Cancelar</btn-custom>
-                                <btn-custom type="submit">Agregar</btn-custom>
+                                <btn-custom variant="tonal" @click="closeDialog()">Cancelar</btn-custom>
+                                <btn-custom type="submit" :disabled="!controls.valid">Agregar</btn-custom>
                             </v-col>
                         </v-row>
                     </v-form>
@@ -66,9 +67,15 @@
 
 <script setup>
 import { fakeApiGetUser } from '@/plugins/fakeApi'
-import { ref, computed, reactive, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, reactive, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { QrcodeStream } from 'vue-qrcode-reader'
 import sonido from '@/assets/beep.mp3'
+import { maxNumber, minNumber, onlyNumbers, required } from '@/plugins/globalRules'
+import { onlyIntegerNumbers } from '@/plugins/formatters'
+import { getCurrentInstance } from 'vue'
+
+const { proxy } = getCurrentInstance()
+const globals = proxy
 
 /** Emits */
 const emit = defineEmits(['addEquipment', 'closeScanner'])
@@ -76,10 +83,12 @@ const emit = defineEmits(['addEquipment', 'closeScanner'])
 /** Data ***/
 /** Controls */
 const controls = reactive({
-    dialogEquipment: false
+    dialogEquipment: false,
+    valid: false
 })
 const isUpdate = ref(false)
-const equipment = ref({ id: '', name: '', photoUrl: '', quantity: 0 })
+const equipment = ref({ name: '', photoUrl: '', quantity: 1 })
+const defaultEquipment = ref({ name: '', photoUrl: '', quantity: 1 })
 
 /** Fullscreen Controls */
 const fullscreen = ref(false)
@@ -93,6 +102,10 @@ watch(fullscreen, (enterFullscreen) => {
         exitFullscreen()
     }
 })
+
+const formRules = {
+    quantity: [required('Cantidad requerida'), onlyNumbers('Cantidad'), minNumber(1, 'Cantidad'), maxNumber(30, 'Cantidad')]
+}
 
 function requestFullscreen() {
     const elem = wrapper.value
@@ -140,10 +153,13 @@ function onDetect(detectedCodes) {
     isUpdate.value = true
     fakeApiGetUser(result.value)
         .then(result => {
-            equipment.value = { ...result }
+            equipment.value = Object.assign({}, { ...result, quantity: 1 })
+            console.log(equipment.value)
             controls.dialogEquipment = true
         })
-        .catch(error => console.error("Error: ", error.message))
+        .catch(error => {
+            globals.$toast.fire({ icon: 'warning', text: error })
+        })
         .finally(() => isUpdate.value = false)
 }
 
@@ -183,8 +199,6 @@ async function onCameraReady(capabilities) {
 
 /*** track functons ***/
 const paintCustom = (detectedCodes, ctx) => {
-    console.log(detectedCodes)
-    console.log(ctx)
     for (const detectedCode of detectedCodes) {
         const {
             boundingBox: { x, y, width, height }
@@ -258,12 +272,26 @@ function onFullscreenChange(event) {
 
 /*** Manejo de eventos posterior a escaneo del código de barras ***/
 const addEquipment = () => {
-    emit('addEquipment', equipment.value)
-    controls.dialogEquipment = false
+    const data = {
+        id: globals.$randomUUID(),
+        productId: equipment.value.productId,
+        name: equipment.value.name,
+        quantity: equipment.value.quantity,
+        codeValid: true
+    }
+    emit('addEquipment', data)
+    closeDialog()
     result.value = ''
 }
 const closeScanner = () => {
     emit('closeScanner')
+}
+
+const closeDialog = async () => {
+    controls.dialogEquipment = false
+    await nextTick()
+    equipment.value = Object.assign({}, defaultEquipment.value)
+    console.log(equipment.value)
 }
 </script>
 
@@ -370,11 +398,13 @@ const closeScanner = () => {
         height: 40px;
         border-width: 5px;
     }
+
     50% {
         width: 0px;
         height: 0px;
         border-width: 5px;
     }
+
     100% {
         width: 40px;
         height: 40px;

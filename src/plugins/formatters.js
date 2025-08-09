@@ -1,5 +1,6 @@
 export const onlyIntegerNumbers = event => {
     const key = event.key
+    if (key === 'Enter') return
     if (!/^\d$/.test(key)) {
         event.preventDefault()
     }
