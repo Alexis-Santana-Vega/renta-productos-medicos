@@ -2,11 +2,11 @@
     <v-card color="background" class="h-100 d-flex flex-column">
         <div :class="{ fullscreen: fullscreen }" ref="wrapper" @fullscreenchange="onFullscreenChange"
             style="overflow: hidden;">
-            <qrcode-stream :torch="torchActive" :constraints="selectedConstraints" :track="trackFunctionSelected.value"
+            <qrcode-stream :paused="controls.paused" :torch="torch.active" :constraints="selectedConstraints" :track="trackFunctionSelected.value"
                 :formats="selectedBarcodeFormats" @error="onError" @detect="onDetect" @camera-on="onCameraReady">
                 <!--Boton de flash y de salida-->
                 <div style="z-index: 3;" class="position-absolute mt-2 ml-2 d-flex flex-wrap ga-2">
-                    <v-btn icon="mdi-flash-outline" @click="torchActive = !torchActive" v-if="torchSupported">
+                    <v-btn icon="mdi-flash-outline" @click="torch.active = !torch.active" v-if="torch.supported">
                     </v-btn>
                     <v-btn icon="mdi-close" @click="closeScanner()">
                     </v-btn>
@@ -18,10 +18,10 @@
                 <!--Animacion CSS-->
                 <div class="h-100 w-100 d-flex align-center justify-center overlay pb-4" v-if="!loading">
                     <div class="scanner">
-                        <div class="corner top-left" :class="{ 'corner-highlight': isUpdate }"></div>
-                        <div class="corner top-right" :class="{ 'corner-highlight': isUpdate }"></div>
-                        <div class="corner bottom-left" :class="{ 'corner-highlight': isUpdate }"></div>
-                        <div class="corner bottom-right" :class="{ 'corner-highlight': isUpdate }"></div>
+                        <div class="corner top-left" :class="{ 'corner-highlight': controls.animation }"></div>
+                        <div class="corner top-right" :class="{ 'corner-highlight': controls.animation }"></div>
+                        <div class="corner bottom-left" :class="{ 'corner-highlight': controls.animation }"></div>
+                        <div class="corner bottom-right" :class="{ 'corner-highlight': controls.animation }"></div>
                         <div class="scan-line"></div>
                     </div>
                 </div>
@@ -33,14 +33,14 @@
                             <v-row dense>
                                 <v-col cols="12" class="text-center">
                                     <v-avatar size="64">
-                                        <v-img :src="equipment.photoUrl"></v-img>
+                                        <v-img :src="equipment.editedItem.photoUrl"></v-img>
                                     </v-avatar>
                                     <div class="text-body-1 font-weight-bold text-medium-emphasis my-2">{{
-                                        equipment.name }}
+                                        equipment.editedItem.name }}
                                     </div>
                                 </v-col>
                                 <v-col cols="12">
-                                    <v-text-field v-model="equipment.quantity" label="Cantidad *" type="number" min="1"
+                                    <v-text-field v-model="equipment.editedItem.quantity" label="Cantidad *" type="number" min="1"
                                         :rules="formRules.quantity" @keypress="onlyIntegerNumbers"></v-text-field>
                                 </v-col>
                                 <v-col cols="12" class="d-flex justify-end flex-wrap ga-2">
@@ -77,6 +77,7 @@ import { maxNumber, minNumber, onlyNumbers, required } from '@/plugins/globalRul
 import { onlyIntegerNumbers } from '@/plugins/formatters'
 import { getCurrentInstance } from 'vue'
 
+/** Data to global methods */
 const { proxy } = getCurrentInstance()
 const globals = proxy
 
@@ -86,17 +87,29 @@ const emit = defineEmits(['addEquipment', 'closeScanner'])
 /** Data ***/
 /** Controls */
 const controls = reactive({
+    paused: false,
     dialogEquipment: false,
-    valid: false
+    valid: false,
+    animation: false
 })
-const isUpdate = ref(false)
-const equipment = ref({ name: '', photoUrl: '', quantity: 1 })
-const defaultEquipment = ref({ name: '', photoUrl: '', quantity: 1 })
-
+/** Torch controls */
+const torch = reactive({
+    active: false,
+    supported: false
+})
 /** Fullscreen Controls */
 const fullscreen = ref(false)
 const wrapper = ref(null)
-
+/** Data equipment */
+const equipment = reactive({
+    editedItem: { name: '', photoUrl: '', quantity: 1 },
+    defaultItem: { name: '', photoUrl: '', quantity: 1 }
+})
+/** Validation Form Rules */
+const formRules = {
+    quantity: [required('Cantidad requerida'), onlyNumbers('Cantidad'), minNumber(1, 'Cantidad'), maxNumber(30, 'Cantidad')]
+}
+/** Watcher */
 watch(fullscreen, (enterFullscreen) => {
     if (enterFullscreen) {
         requestFullscreen()
@@ -104,16 +117,10 @@ watch(fullscreen, (enterFullscreen) => {
         exitFullscreen()
     }
 })
-
-const formRules = {
-    quantity: [required('Cantidad requerida'), onlyNumbers('Cantidad'), minNumber(1, 'Cantidad'), maxNumber(30, 'Cantidad')]
-}
-
+/** Methods */
 function requestFullscreen() {
     const elem = wrapper.value
-
     if (!elem) return
-
     if (elem.requestFullscreen) {
         elem.requestFullscreen()
     } else if (elem.mozRequestFullScreen) {
@@ -124,7 +131,6 @@ function requestFullscreen() {
         elem.msRequestFullscreen()
     }
 }
-
 function exitFullscreen() {
     if (document.exitFullscreen) {
         document.exitFullscreen()
@@ -137,10 +143,6 @@ function exitFullscreen() {
     }
 }
 
-/** Detection torch */
-const torchActive = ref(false)
-const torchSupported = ref(false)
-
 /*** Detection handling ***/
 
 const result = ref('')
@@ -148,19 +150,23 @@ const result = ref('')
 /** Audio Scanner */
 let audioScanner = new Audio(sonido)
 
-function onDetect(detectedCodes) {
-    result.value = detectedCodes[0].rawValue.trim()
+function onDetect([firstDetectedCode]) {
+    result.value = firstDetectedCode.rawValue.trim()
     audioScanner.play()
-    isUpdate.value = true
+    controls.paused = true
+    controls.animation = true
     fakeApiGetUser(result.value)
         .then(result => {
-            equipment.value = Object.assign({}, { ...result, quantity: 1 })
+            equipment.editedItem = Object.assign({}, { ...result, codeValid: true, quantity: 1 })
             controls.dialogEquipment = true
         })
         .catch(error => {
             globals.$toastFullscreen().fire({ icon: 'warning', text: 'Código no reconocido' })
         })
-        .finally(() => isUpdate.value = false)
+        .finally(() => {
+            controls.animation = false
+            controls.paused = false
+        })
 }
 
 /*** select camera ***/
@@ -177,7 +183,7 @@ const constraintOptions = ref([
     { label: "rear camera", constraints: { facingMode: "environment" } },
     { label: "front camera", constraints: { facingMode: "user" } },
 ])
-const loading = ref(true)
+const loading = ref(false)
 
 async function onCameraReady(capabilities) {
     // NOTE: on iOS we can't invoke `enumerateDevices` before the user has given
@@ -195,7 +201,7 @@ async function onCameraReady(capabilities) {
                 constraints: { deviceId }
             }))
         ]
-        torchSupported.value = capabilities.torch
+        torch.supported = capabilities.torch
         error.value = ''
     } catch (error) {
         error.value = `Error fetching devices: ${error.message}`
@@ -281,10 +287,10 @@ function onFullscreenChange(event) {
 const addEquipment = () => {
     const data = {
         id: globals.$randomUUID(),
-        productId: equipment.value.productId,
-        name: equipment.value.name,
-        quantity: equipment.value.quantity,
-        codeValid: true
+        productId: equipment.editedItem.productId,
+        name: equipment.editedItem.name,
+        quantity: equipment.editedItem.quantity,
+        codeValid: equipment.editedItem.codeValid
     }
     emit('addEquipment', data)
     closeDialog()
@@ -297,7 +303,7 @@ const closeScanner = () => {
 const closeDialog = async () => {
     controls.dialogEquipment = false
     await nextTick()
-    equipment.value = Object.assign({}, defaultEquipment.value)
+    equipment.editedItem = Object.assign({}, equipment.defaultItem)
 }
 </script>
 
