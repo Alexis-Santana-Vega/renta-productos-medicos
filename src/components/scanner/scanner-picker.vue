@@ -52,7 +52,6 @@
                     </card-form>
                 </card-dialog>
             </v-dialog>
-            <loading-overlay v-model="loading" contained></loading-overlay>
         </div>
         <!--Controles-->
         <div class="position-relative mt-n2 pa-2 bg-surface" style="overflow: hidden;">
@@ -72,7 +71,7 @@
 import { fakeApiGetUser } from '@/plugins/fakeApi'
 import { ref, computed, reactive, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { QrcodeStream } from 'vue-qrcode-reader'
-import sonido from '@/assets/beep.mp3'
+import beepSound from '@/assets/beep.mp3'
 import { maxNumber, minNumber, onlyNumbers, required } from '@/plugins/globalRules'
 import { onlyIntegerNumbers } from '@/plugins/formatters'
 import { getCurrentInstance } from 'vue'
@@ -85,6 +84,7 @@ const globals = proxy
 const emit = defineEmits(['addEquipment', 'closeScanner'])
 
 /** Data ***/
+const result = ref('')
 /** Controls */
 const controls = reactive({
     paused: false,
@@ -109,122 +109,15 @@ const equipment = reactive({
 const formRules = {
     quantity: [required('Cantidad requerida'), onlyNumbers('Cantidad'), minNumber(1, 'Cantidad'), maxNumber(30, 'Cantidad')]
 }
-/** Watcher */
-watch(fullscreen, (enterFullscreen) => {
-    if (enterFullscreen) {
-        requestFullscreen()
-    } else {
-        exitFullscreen()
-    }
-})
-/** Methods */
-function requestFullscreen() {
-    const elem = wrapper.value
-    if (!elem) return
-    if (elem.requestFullscreen) {
-        elem.requestFullscreen()
-    } else if (elem.mozRequestFullScreen) {
-        elem.mozRequestFullScreen()
-    } else if (elem.webkitRequestFullscreen) {
-        elem.webkitRequestFullscreen()
-    } else if (elem.msRequestFullscreen) {
-        elem.msRequestFullscreen()
-    }
-}
-function exitFullscreen() {
-    if (document.exitFullscreen) {
-        document.exitFullscreen()
-    } else if (document.mozCancelFullScreen) {
-        document.mozCancelFullScreen()
-    } else if (document.webkitExitFullscreen) {
-        document.webkitExitFullscreen()
-    } else if (document.msExitFullscreen) {
-        document.msExitFullscreen()
-    }
-}
-
-/*** Detection handling ***/
-
-const result = ref('')
-
 /** Audio Scanner */
-let audioScanner = new Audio(sonido)
-
-function onDetect([firstDetectedCode]) {
-    result.value = firstDetectedCode.rawValue.trim()
-    audioScanner.play()
-    controls.paused = true
-    controls.animation = true
-    fakeApiGetUser(result.value)
-        .then(result => {
-            equipment.editedItem = Object.assign({}, { ...result, codeValid: true, quantity: 1 })
-            controls.dialogEquipment = true
-        })
-        .catch(error => {
-            globals.$toastFullscreen().fire({ icon: 'warning', text: 'Código no reconocido' })
-        })
-        .finally(() => {
-            controls.animation = false
-            controls.paused = false
-        })
-}
-
-/*** select camera ***/
-const destroyCamera = ref(false)
-
-const reload = async () => {
-    destroyCamera.value = true
-    await nextTick()
-    destroyCamera.value = false
-    loading.value = true
-}
+let audioScanner = new Audio(beepSound)
+/** Camera options */
 const selectedConstraints = ref({ facingMode: 'environment' })
 const constraintOptions = ref([
     { label: "rear camera", constraints: { facingMode: "environment" } },
     { label: "front camera", constraints: { facingMode: "user" } },
 ])
-const loading = ref(false)
-
-async function onCameraReady(capabilities) {
-    // NOTE: on iOS we can't invoke `enumerateDevices` before the user has given
-    // camera access permission. `QrcodeStream` internally takes care of
-    // requesting the permissions. The `camera-on` event should guarantee that this
-    // has happened.
-    try {
-        loading.value = true
-        const devices = await navigator.mediaDevices.enumerateDevices()
-        const videoDevices = devices.filter(({ kind }) => kind === 'videoinput')
-
-        constraintOptions.value = [
-            ...videoDevices.map(({ deviceId, label }) => ({
-                label: `${label} (ID: ${deviceId})`,
-                constraints: { deviceId }
-            }))
-        ]
-        torch.supported = capabilities.torch
-        error.value = ''
-    } catch (error) {
-        error.value = `Error fetching devices: ${error.message}`
-    } finally {
-        loading.value = false
-    }
-}
-
-/*** track functons ***/
-const paintCustom = (detectedCodes, ctx) => {
-    for (const detectedCode of detectedCodes) {
-        const {
-            boundingBox: { x, y, width, height }
-        } = detectedCode
-
-        ctx.lineWidth = 2
-        ctx.strokeStyle = '#FFFFFF'
-        ctx.strokeRect(x, y, width, height)
-    }
-}
-const trackFunctionSelected = ref({ text: 'Custom Track', value: paintCustom })
-
-/*** Formatos de codigos ***/
+/*** Barcode Format Options ***/
 const barcodeFormats = ref({
     // aztec: false,
     code_128: true,
@@ -248,14 +141,112 @@ const barcodeFormats = ref({
     // linear_codes: false,
     // matrix_codes: false
 })
+/** Error message */
+const error = ref('')
+/** Watcher */
+watch(fullscreen, (enterFullscreen) => {
+    if (enterFullscreen) {
+        requestFullscreen()
+    } else {
+        exitFullscreen()
+    }
+})
+watch(selectedConstraints, (nv) => {
+    console.log(nv)
+})
+/** Computed Methods */
 const selectedBarcodeFormats = computed(() => {
     return Object.keys(barcodeFormats.value).filter((format) => barcodeFormats.value[format])
 })
-
-/*** Manejo de errores ***/
-const error = ref('')
-/** Función modificada de la original de la documentación */
-function onError(err) {
+/** Methods */
+/** Fullscreen methods */
+const requestFullscreen = () => {
+    const elem = wrapper.value
+    if (!elem) return
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen()
+    } else if (elem.mozRequestFullScreen) {
+        elem.mozRequestFullScreen()
+    } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen()
+    } else if (elem.msRequestFullscreen) {
+        elem.msRequestFullscreen()
+    }
+}
+const exitFullscreen = () => {
+    if (document.exitFullscreen) {
+        document.exitFullscreen()
+    } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen()
+    } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen()
+    } else if (document.msExitFullscreen) {
+        document.msExitFullscreen()
+    }
+}
+const onFullscreenChange =(event) => {
+    // This becomes important when the user doesn't use the button to exit
+    // fullscreen but hits ESC on desktop, pushes a physical back button on
+    // mobile etc.
+    fullscreen.value = document.fullscreenElement !== null
+}
+/*** Detection handling ***/
+const onDetect = ([firstDetectedCode]) => {
+    result.value = firstDetectedCode.rawValue.trim()
+    controls.paused = true
+    controls.animation = true
+    audioScanner.play()
+    fakeApiGetUser(result.value)
+        .then(result => {
+            equipment.editedItem = Object.assign({}, { ...result, codeValid: true, quantity: 1 })
+            controls.dialogEquipment = true
+        })
+        .catch(error => {
+            globals.$toastFullscreen().fire({ icon: 'warning', text: 'Código no reconocido' })
+            controls.paused = false
+        })
+        .finally(() => {
+            controls.animation = false
+            result.value = ''
+        })
+}
+const loading = ref(true)
+const onCameraReady = async (capabilities) => {
+    // NOTE: on iOS we can't invoke `enumerateDevices` before the user has given
+    // camera access permission. `QrcodeStream` internally takes care of
+    // requesting the permissions. The `camera-on` event should guarantee that this
+    // has happened.
+    try {
+        const devices = await navigator.mediaDevices.enumerateDevices()
+        const videoDevices = devices.filter(({ kind }) => kind === 'videoinput')
+        constraintOptions.value = [
+            ...videoDevices.map(({ deviceId, label }) => ({
+                label: `${label} (ID: ${deviceId})`,
+                constraints: { deviceId }
+            }))
+        ]
+        torch.supported = capabilities.torch
+        error.value = ''
+    } catch (error) {
+        error.value = `Error fetching devices: ${error.message}`
+    } finally {
+        loading.value = false
+    }
+}
+/*** Track Functions ***/
+const paintCustom = (detectedCodes, ctx) => {
+    for (const detectedCode of detectedCodes) {
+        const {
+            boundingBox: { x, y, width, height }
+        } = detectedCode
+        ctx.lineWidth = 2
+        ctx.strokeStyle = '#FFFFFF'
+        ctx.strokeRect(x, y, width, height)
+    }
+}
+const trackFunctionSelected = ref({ text: 'Custom Track', value: paintCustom })
+/*** Handling errors ***/
+const onError = (err) => {
     error.value = `[${err.name}]: `
     if (err.name === 'NotAllowedError') {
         error.value = 'Por favor, permite el acceso a la cámara.'
@@ -270,20 +261,10 @@ function onError(err) {
     } else if (err.name === 'StreamApiNotSupportedError') {
         error.value = 'Tu navegador no permite usar la cámara.'
     } else {
-        // Mensaje para errores no controlados
         error.value = 'Ocurrió un error al intentar acceder a la cámara.'
     }
 }
-
-/*** Manejo de las funciones de pantalla completa ***/
-function onFullscreenChange(event) {
-    // This becomes important when the user doesn't use the button to exit
-    // fullscreen but hits ESC on desktop, pushes a physical back button on
-    // mobile etc.
-    fullscreen.value = document.fullscreenElement !== null
-}
-
-/*** Manejo de eventos posterior a escaneo del código de barras ***/
+/*** Handling Emits ***/
 const addEquipment = () => {
     const data = {
         id: globals.$randomUUID(),
@@ -294,14 +275,13 @@ const addEquipment = () => {
     }
     emit('addEquipment', data)
     closeDialog()
-    result.value = ''
 }
 const closeScanner = () => {
     emit('closeScanner')
 }
-
 const closeDialog = async () => {
     controls.dialogEquipment = false
+    controls.paused = false
     await nextTick()
     equipment.editedItem = Object.assign({}, equipment.defaultItem)
 }
