@@ -206,53 +206,53 @@ const fakeApiGetEntraces = () => {
 }
 
 const fakeEntraceById = [
-  {
-    id: '12345',
-    datetime: '2025-08-02T16:00',
-    inputType: 'TRANSFERENCIA',
-    originLocationId: '1',
-    providerId: null,
-    invoiceAmount: '0.0',
-    note: 'Carga Norte a Sur',
-    items: [
-      { productId: '5012345678900', name: 'Ventiler Nat QA', quantity: 3 },
-      { productId: '9780201379624', name: 'ThermaBath 100', quantity: 7 },
-      { productId: '6901234567892', name: 'BioSafe B2', quantity: 1 },
-      { productId: '5601234567897', name: 'AutoPipette X3', quantity: 6 },
-      { productId: '7701234567890', name: 'HoneyWell H6024 a10 Plus', quantity: 10 }
-    ]
-  },
-  {
-    id: '12346',
-    datetime: '2025-08-03T05:32',
-    inputType: 'COMPRA',
-    originLocationId: null,
-    providerId: '2',
-    invoiceAmount: '1,200.00',
-    note: 'Compra directa',
-    items: [
-      { productId: '4006381333931', name: 'Neo Camilla v3', quantity: 2 },
-      { productId: '8801234567896', name: 'MicroScope Pro', quantity: 5 },
-      { productId: '7501031311305', name: 'OxyFlow 5L Oxygen XML', quantity: 9 },
-      { productId: '8901234567893', name: 'Drager Oxylog 300', quantity: 4 }
-    ]
-  },
-  {
-    id: '12347',
-    datetime: '2025-08-03T12:10',
-    inputType: 'COMPRA',
-    originLocationId: null,
-    providerId: '3',
-    invoiceAmount: '15,340.45',
-    note: 'Compra por periodo',
-    items: [
-      { productId: '8412345678902', name: 'RadowLife 1', quantity: 8 },
-      { productId: '9780201379624', name: 'ThermaBath 100', quantity: 6 },
-      { productId: '4006381333931', name: 'Neo Camilla v3', quantity: 2 },
-      { productId: '5601234567897', name: 'AutoPipette X3', quantity: 7 },
-      { productId: '8801234567896', name: 'MicroScope Pro', quantity: 1 }
-    ]
-  }
+    {
+        id: '12345',
+        datetime: '2025-08-02T16:00',
+        inputType: 'TRANSFERENCIA',
+        originLocationId: '1',
+        providerId: null,
+        invoiceAmount: '0.0',
+        note: 'Carga Norte a Sur',
+        items: [
+            { productId: '5012345678900', name: 'Ventiler Nat QA', quantity: 3 },
+            { productId: '9780201379624', name: 'ThermaBath 100', quantity: 7 },
+            { productId: '6901234567892', name: 'BioSafe B2', quantity: 1 },
+            { productId: '5601234567897', name: 'AutoPipette X3', quantity: 6 },
+            { productId: '7701234567890', name: 'HoneyWell H6024 a10 Plus', quantity: 10 }
+        ]
+    },
+    {
+        id: '12346',
+        datetime: '2025-08-03T05:32',
+        inputType: 'COMPRA',
+        originLocationId: null,
+        providerId: '2',
+        invoiceAmount: '1,200.00',
+        note: 'Compra directa',
+        items: [
+            { productId: '4006381333931', name: 'Neo Camilla v3', quantity: 2 },
+            { productId: '8801234567896', name: 'MicroScope Pro', quantity: 5 },
+            { productId: '7501031311305', name: 'OxyFlow 5L Oxygen XML', quantity: 9 },
+            { productId: '8901234567893', name: 'Drager Oxylog 300', quantity: 4 }
+        ]
+    },
+    {
+        id: '12347',
+        datetime: '2025-08-03T12:10',
+        inputType: 'COMPRA',
+        originLocationId: null,
+        providerId: '3',
+        invoiceAmount: '15,340.45',
+        note: 'Compra por periodo',
+        items: [
+            { productId: '8412345678902', name: 'RadowLife 1', quantity: 8 },
+            { productId: '9780201379624', name: 'ThermaBath 100', quantity: 6 },
+            { productId: '4006381333931', name: 'Neo Camilla v3', quantity: 2 },
+            { productId: '5601234567897', name: 'AutoPipette X3', quantity: 7 },
+            { productId: '8801234567896', name: 'MicroScope Pro', quantity: 1 }
+        ]
+    }
 ]
 
 
