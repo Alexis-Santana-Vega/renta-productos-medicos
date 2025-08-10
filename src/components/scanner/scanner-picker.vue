@@ -4,26 +4,55 @@
             style="overflow: hidden;">
             <qrcode-stream :torch="torchActive" :constraints="selectedConstraints" :track="trackFunctionSelected.value"
                 :formats="selectedBarcodeFormats" @error="onError" @detect="onDetect" @camera-on="onCameraReady">
-                <!--Boton de flash-->
+                <!--Boton de flash y de salida-->
                 <div style="z-index: 3;" class="position-absolute mt-2 ml-2 d-flex flex-wrap ga-2">
                     <v-btn icon="mdi-flash-outline" @click="torchActive = !torchActive" v-if="torchSupported">
                     </v-btn>
                     <v-btn icon="mdi-close" @click="closeScanner()">
                     </v-btn>
                 </div>
-                <v-btn :icon="fullscreen ? 'mdi-fullscreen' : 'mdi-fullscreen-exit'"
+                <!--Boton de modo fullscreen-->
+                <v-btn :icon="fullscreen ? 'mdi-fullscreen-exit' : 'mdi-fullscreen'"
                     :style="`position: absolute; bottom: ${fullscreen ? '10' : '20'}px; right: 10px; z-index: 3;`"
                     @click="fullscreen = !fullscreen"></v-btn>
-                <div class="h-100 w-100 d-flex align-center justify-center overlay pb-4">
+                <!--Animacion CSS-->
+                <div class="h-100 w-100 d-flex align-center justify-center overlay pb-4" v-if="!loading">
                     <div class="scanner">
-                        <div class="corner top-left" :class="{ 'scan-line-highlight': isUpdate }"></div>
-                        <div class="corner top-right" :class="{ 'scan-line-highlight': isUpdate }"></div>
-                        <div class="corner bottom-left" :class="{ 'scan-line-highlight': isUpdate }"></div>
-                        <div class="corner bottom-right" :class="{ 'scan-line-highlight': isUpdate }"></div>
+                        <div class="corner top-left" :class="{ 'corner-highlight': isUpdate }"></div>
+                        <div class="corner top-right" :class="{ 'corner-highlight': isUpdate }"></div>
+                        <div class="corner bottom-left" :class="{ 'corner-highlight': isUpdate }"></div>
+                        <div class="corner bottom-right" :class="{ 'corner-highlight': isUpdate }"></div>
                         <div class="scan-line"></div>
                     </div>
                 </div>
             </qrcode-stream>
+            <v-dialog :model-value="controls.dialogEquipment" width="500" scrollable persistent :attach="$refs.wrapper">
+                <card-dialog icon="mdi-hospital-box-outline" title="Información" @close="closeDialog()">
+                    <card-form>
+                        <v-form v-model="controls.valid" @submit.prevent="addEquipment()">
+                            <v-row dense>
+                                <v-col cols="12" class="text-center">
+                                    <v-avatar size="64">
+                                        <v-img :src="equipment.photoUrl"></v-img>
+                                    </v-avatar>
+                                    <div class="text-body-1 font-weight-bold text-medium-emphasis my-2">{{
+                                        equipment.name }}
+                                    </div>
+                                </v-col>
+                                <v-col cols="12">
+                                    <v-text-field v-model="equipment.quantity" label="Cantidad *" type="number" min="1"
+                                        :rules="formRules.quantity" @keypress="onlyIntegerNumbers"></v-text-field>
+                                </v-col>
+                                <v-col cols="12" class="d-flex justify-end flex-wrap ga-2">
+                                    <btn-custom variant="tonal" @click="closeDialog()">Cancelar</btn-custom>
+                                    <btn-custom type="submit" :disabled="!controls.valid">Agregar</btn-custom>
+                                </v-col>
+                            </v-row>
+                        </v-form>
+                    </card-form>
+                </card-dialog>
+            </v-dialog>
+            <loading-overlay v-model="loading" contained></loading-overlay>
         </div>
         <!--Controles-->
         <div class="position-relative mt-n2 pa-2 bg-surface" style="overflow: hidden;">
@@ -36,32 +65,6 @@
                 icon="mdi-alert-circle-outline" v-if="error">{{ error
                 }}</v-alert>
         </div>
-        <v-dialog :model-value="controls.dialogEquipment" width="500" scrollable persistent>
-            <card-dialog icon="mdi-hospital-box-outline" title="Información" @close="closeDialog()">
-                <card-form>
-                    <v-form v-model="controls.valid" @submit.prevent="addEquipment()">
-                        <v-row dense>
-                            <v-col cols="12" class="text-center">
-                                <v-avatar size="64">
-                                    <v-img :src="equipment.photoUrl"></v-img>
-                                </v-avatar>
-                                <div class="text-body-1 font-weight-bold text-medium-emphasis my-2">{{ equipment.name }}
-                                </div>
-                            </v-col>
-                            <v-col cols="12">
-                                <v-text-field v-model="equipment.quantity" label="Cantidad *" type="number" min="1"
-                                    :rules="formRules.quantity" @keypress="onlyIntegerNumbers"></v-text-field>
-                            </v-col>
-                            <v-col cols="12" class="d-flex justify-end flex-wrap ga-2">
-                                <btn-custom variant="tonal" @click="closeDialog()">Cancelar</btn-custom>
-                                <btn-custom type="submit" :disabled="!controls.valid">Agregar</btn-custom>
-                            </v-col>
-                        </v-row>
-                    </v-form>
-                </card-form>
-            </card-dialog>
-        </v-dialog>
-        <loading-overlay v-model="loading" contained></loading-overlay>
     </v-card>
 </template>
 
@@ -95,7 +98,6 @@ const fullscreen = ref(false)
 const wrapper = ref(null)
 
 watch(fullscreen, (enterFullscreen) => {
-    console.log(enterFullscreen)
     if (enterFullscreen) {
         requestFullscreen()
     } else {
@@ -147,24 +149,29 @@ const result = ref('')
 let audioScanner = new Audio(sonido)
 
 function onDetect(detectedCodes) {
-    // console.log(detectedCodes) // To detect Code and view info
     result.value = detectedCodes[0].rawValue.trim()
     audioScanner.play()
     isUpdate.value = true
     fakeApiGetUser(result.value)
         .then(result => {
             equipment.value = Object.assign({}, { ...result, quantity: 1 })
-            console.log(equipment.value)
             controls.dialogEquipment = true
         })
         .catch(error => {
-            globals.$toast.fire({ icon: 'warning', text: error })
+            globals.$toastFullscreen().fire({ icon: 'warning', text: 'Código no reconocido' })
         })
         .finally(() => isUpdate.value = false)
 }
 
 /*** select camera ***/
+const destroyCamera = ref(false)
 
+const reload = async () => {
+    destroyCamera.value = true
+    await nextTick()
+    destroyCamera.value = false
+    loading.value = true
+}
 const selectedConstraints = ref({ facingMode: 'environment' })
 const constraintOptions = ref([
     { label: "rear camera", constraints: { facingMode: "environment" } },
@@ -291,26 +298,28 @@ const closeDialog = async () => {
     controls.dialogEquipment = false
     await nextTick()
     equipment.value = Object.assign({}, defaultEquipment.value)
-    console.log(equipment.value)
 }
 </script>
 
 <style scoped>
+/* ----- Pantalla completa ----- */
 .fullscreen {
     position: fixed;
     z-index: 5000;
-    top: 0;
-    bottom: 0;
-    right: 0;
-    left: 0;
+    inset: 0;
 }
 
+/* ----- Línea de escaneo ----- */
 .scan-line {
     position: absolute;
+    top: 0;
     width: 100%;
     height: 2px;
-    background: linear-gradient(to right, transparent 0%, white 20%, white 80%, transparent 100%);
-    top: 0;
+    background: linear-gradient(to right,
+            transparent 0%,
+            white 20%,
+            white 80%,
+            transparent 100%);
     animation: scan 8s ease-in-out infinite;
 }
 
@@ -326,6 +335,7 @@ const closeDialog = async () => {
     }
 }
 
+/* ----- Overlay con recorte central ----- */
 .overlay {
     position: absolute;
 }
@@ -338,14 +348,14 @@ const closeDialog = async () => {
     width: 80%;
     height: 70%;
     transform: translate(-50%, -50%);
-    z-index: 1;
-    margin: 0px 0px 0px 0px;
     margin-top: -8px;
-    border: 1px solid rgba(255, 255, 255, .3);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.3);
+    z-index: 1;
     overflow: hidden;
 }
 
+/* ----- Área del escáner ----- */
 .scanner {
     position: absolute;
     width: 80%;
@@ -353,6 +363,7 @@ const closeDialog = async () => {
     overflow: hidden;
 }
 
+/* ----- Esquinas del marco ----- */
 .corner {
     position: absolute;
     width: 30px;
@@ -388,26 +399,23 @@ const closeDialog = async () => {
     border-top: none;
 }
 
-.scan-line-highlight {
-    animation: cornerFlash .3s ease-out;
+/* ----- Destello en esquinas ----- */
+.corner-highlight {
+    animation: cornerFlash 0.3s ease-out;
 }
 
 @keyframes cornerFlash {
-    0% {
+
+    0%,
+    100% {
         width: 40px;
         height: 40px;
         border-width: 5px;
     }
 
     50% {
-        width: 0px;
-        height: 0px;
-        border-width: 5px;
-    }
-
-    100% {
-        width: 40px;
-        height: 40px;
+        width: 0;
+        height: 0;
         border-width: 5px;
     }
 }

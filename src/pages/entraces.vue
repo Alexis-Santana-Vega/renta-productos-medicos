@@ -306,7 +306,7 @@ export default {
         const addEquipment = (n) => {
             console.log(n)
             entraces.editedItem.items.push(n)
-            globals.$toast.fire({ icon: 'success', text: 'Equipo agregado a la lista' })
+            globals.$toastFullscreen().fire({ icon: 'success', text: 'Equipo agregado a la lista' })
         }
 
         const deleteEquipment = (item) => {

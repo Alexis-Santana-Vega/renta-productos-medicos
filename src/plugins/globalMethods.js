@@ -40,6 +40,25 @@ export default {
             }
         })
 
+        app.config.globalProperties.$toastFullscreen = () => {
+            const fullscreenTarget = document.fullscreenElement || undefined
+            const baseConfig = {
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3500,
+                timerProgressBar: true,
+                background: 'rgb(var(--v-theme-surface))',
+                color: 'rgb(var(--v-theme-surface-variant))',
+                didOpen: (evtToast) => {
+                    evtToast.addEventListener('mouseenter', Swal.stopTimer)
+                    evtToast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            }
+            if (fullscreenTarget) baseConfig.target = fullscreenTarget
+            return Swal.mixin(baseConfig)
+        }
+
         app.config.globalProperties.$swalConfirm = async (title, icon, text) => {
             return await Swal.fire({
                 title: title,
@@ -92,8 +111,8 @@ export default {
             return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
         }
 
-        app.config.globalProperties.$selectIconEntrace = function(value) {
-            switch(value) {
+        app.config.globalProperties.$selectIconEntrace = function (value) {
+            switch (value) {
                 case 'TRANSFERENCIA': return 'mdi-map-marker-outline'
                 case 'COMPRA': return 'mdi-handshake-outline'
                 default: return null

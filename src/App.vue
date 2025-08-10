@@ -221,7 +221,7 @@ export default {
 </script>
 <style>
 div:where(.swal2-container) {
-  z-index: 3000 !important;
+  z-index: 6000 !important;
 }
 
 .v-navigation-drawer {
