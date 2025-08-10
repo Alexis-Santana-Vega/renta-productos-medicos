@@ -16,7 +16,7 @@
                     :style="`position: absolute; bottom: ${fullscreen ? '10' : '20'}px; right: 10px; z-index: 3;`"
                     @click="fullscreen = !fullscreen"></v-btn>
                 <!--Animacion CSS-->
-                <div class="h-100 w-100 d-flex align-center justify-center overlay pb-4" v-if="!loading">
+                <div class="h-100 w-100 d-flex align-center justify-center overlay pb-4" v-if="!controls.loading">
                     <div class="scanner">
                         <div class="corner top-left" :class="{ 'corner-highlight': controls.animation }"></div>
                         <div class="corner top-right" :class="{ 'corner-highlight': controls.animation }"></div>
@@ -90,7 +90,8 @@ const controls = reactive({
     paused: false,
     dialogEquipment: false,
     valid: false,
-    animation: false
+    animation: false,
+    loading: true
 })
 /** Torch controls */
 const torch = reactive({
@@ -151,9 +152,6 @@ watch(fullscreen, (enterFullscreen) => {
         exitFullscreen()
     }
 })
-watch(selectedConstraints, (nv) => {
-    console.log(nv)
-})
 /** Computed Methods */
 const selectedBarcodeFormats = computed(() => {
     return Object.keys(barcodeFormats.value).filter((format) => barcodeFormats.value[format])
@@ -210,7 +208,7 @@ const onDetect = ([firstDetectedCode]) => {
             result.value = ''
         })
 }
-const loading = ref(true)
+
 const onCameraReady = async (capabilities) => {
     // NOTE: on iOS we can't invoke `enumerateDevices` before the user has given
     // camera access permission. `QrcodeStream` internally takes care of
@@ -230,7 +228,7 @@ const onCameraReady = async (capabilities) => {
     } catch (error) {
         error.value = `Error fetching devices: ${error.message}`
     } finally {
-        loading.value = false
+        controls.loading = false
     }
 }
 /*** Track Functions ***/
