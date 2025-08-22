@@ -5,6 +5,11 @@
             <qrcode-stream :paused="controls.paused" :torch="torch.active" :constraints="selectedConstraints"
                 :track="trackFunctionSelected.value" :formats="selectedBarcodeFormats" @error="onError"
                 @detect="onDetect" @camera-on="onCameraReady">
+                <!--
+                *
+                * Cambios de botones: INICIO
+                *
+                -->
                 <!--Boton de flash y de fullscreen-->
                 <div style="z-index: 3;" class="position-absolute right-0 bottom-0 mr-2 mb-4 d-flex flex-wrap ga-2">
                     <v-btn icon="mdi-flash-outline" @click="torch.active = !torch.active" v-if="torch.supported">
@@ -16,6 +21,11 @@
                 <v-btn icon="mdi-close" style="position: absolute; bottom: 16px; left: 9px; z-index: 3;"
                     @click="closeScanner()">
                 </v-btn>
+                <!--
+                *
+                * Cambios de botones: FIN
+                *
+                -->
                 <!--Animacion CSS-->
                 <div class="h-100 w-100 d-flex align-center justify-center overlay pb-4" v-if="!controls.loading">
                     <div class="scanner">
@@ -27,7 +37,7 @@
                     </div>
                 </div>
             </qrcode-stream>
-            <v-dialog :model-value="controls.dialogEquipment" width="500" scrollable persistent :attach="$refs.wrapper">
+            <v-dialog :model-value="controls.dialogEquipment" width="500" scrollable persistent :attach="$refs.wrapper" @after-enter="focusQuantity()">
                 <card-dialog icon="mdi-hospital-box-outline" title="Información" @close="closeDialog()">
                     <card-form>
                         <v-form v-model="controls.valid" @submit.prevent="addEquipment()">
@@ -41,7 +51,7 @@
                                     </div>
                                 </v-col>
                                 <v-col cols="12">
-                                    <v-text-field v-model="equipment.editedItem.quantity" label="Cantidad *"
+                                    <v-text-field ref="quantityField" v-model="equipment.editedItem.quantity" label="Cantidad *"
                                         type="number" min="1" :rules="formRules.quantity"
                                         @keypress="onlyIntegerNumbers"></v-text-field>
                                 </v-col>
@@ -87,6 +97,7 @@ const emit = defineEmits(['addEquipment', 'closeScanner'])
 
 /** Data ***/
 const result = ref('')
+const quantityField = ref(null)
 /** Controls */
 const controls = reactive({
     paused: false,
@@ -284,6 +295,12 @@ const closeDialog = async () => {
     controls.paused = false
     await nextTick()
     equipment.editedItem = Object.assign({}, equipment.defaultItem)
+}
+
+const focusQuantity = async () => {
+    await nextTick()
+    quantityField.value.focus()
+    quantityField.value.select()
 }
 </script>
 
