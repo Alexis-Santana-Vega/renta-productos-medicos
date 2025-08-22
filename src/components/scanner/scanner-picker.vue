@@ -2,19 +2,20 @@
     <v-card color="background" class="h-100 d-flex flex-column">
         <div :class="{ fullscreen: fullscreen }" ref="wrapper" @fullscreenchange="onFullscreenChange"
             style="overflow: hidden;">
-            <qrcode-stream :paused="controls.paused" :torch="torch.active" :constraints="selectedConstraints" :track="trackFunctionSelected.value"
-                :formats="selectedBarcodeFormats" @error="onError" @detect="onDetect" @camera-on="onCameraReady">
-                <!--Boton de flash y de salida-->
-                <div style="z-index: 3;" class="position-absolute mt-2 ml-2 d-flex flex-wrap ga-2">
+            <qrcode-stream :paused="controls.paused" :torch="torch.active" :constraints="selectedConstraints"
+                :track="trackFunctionSelected.value" :formats="selectedBarcodeFormats" @error="onError"
+                @detect="onDetect" @camera-on="onCameraReady">
+                <!--Boton de flash y de fullscreen-->
+                <div style="z-index: 3;" class="position-absolute right-0 bottom-0 mr-2 mb-4 d-flex flex-wrap ga-2">
                     <v-btn icon="mdi-flash-outline" @click="torch.active = !torch.active" v-if="torch.supported">
                     </v-btn>
-                    <v-btn icon="mdi-close" @click="closeScanner()">
-                    </v-btn>
+                    <v-btn :icon="fullscreen ? 'mdi-fullscreen-exit' : 'mdi-fullscreen'"
+                        @click="fullscreen = !fullscreen"></v-btn>
                 </div>
-                <!--Boton de modo fullscreen-->
-                <v-btn :icon="fullscreen ? 'mdi-fullscreen-exit' : 'mdi-fullscreen'"
-                    :style="`position: absolute; bottom: ${fullscreen ? '10' : '20'}px; right: 10px; z-index: 3;`"
-                    @click="fullscreen = !fullscreen"></v-btn>
+                <!--Boton de modo salida-->
+                <v-btn icon="mdi-close" style="position: absolute; bottom: 16px; left: 9px; z-index: 3;"
+                    @click="closeScanner()">
+                </v-btn>
                 <!--Animacion CSS-->
                 <div class="h-100 w-100 d-flex align-center justify-center overlay pb-4" v-if="!controls.loading">
                     <div class="scanner">
@@ -40,8 +41,9 @@
                                     </div>
                                 </v-col>
                                 <v-col cols="12">
-                                    <v-text-field v-model="equipment.editedItem.quantity" label="Cantidad *" type="number" min="1"
-                                        :rules="formRules.quantity" @keypress="onlyIntegerNumbers"></v-text-field>
+                                    <v-text-field v-model="equipment.editedItem.quantity" label="Cantidad *"
+                                        type="number" min="1" :rules="formRules.quantity"
+                                        @keypress="onlyIntegerNumbers"></v-text-field>
                                 </v-col>
                                 <v-col cols="12" class="d-flex justify-end flex-wrap ga-2">
                                     <btn-custom variant="tonal" @click="closeDialog()">Cancelar</btn-custom>
@@ -182,7 +184,7 @@ const exitFullscreen = () => {
         document.msExitFullscreen()
     }
 }
-const onFullscreenChange =(event) => {
+const onFullscreenChange = (event) => {
     // This becomes important when the user doesn't use the button to exit
     // fullscreen but hits ESC on desktop, pushes a physical back button on
     // mobile etc.
