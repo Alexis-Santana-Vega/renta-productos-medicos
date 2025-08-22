@@ -118,5 +118,13 @@ export default {
                 default: return null
             }
         }
+
+        app.config.globalProperties.$selectIconExit = function (value) {
+            switch (value) {
+                case 'TRANSFERENCIA': return 'mdi-map-marker-outline'
+                case 'VENTA': return 'mdi-handshake-outline'
+                default: return null
+            }
+        }
     }
 }

@@ -269,4 +269,92 @@ const fakeApiGetEntraceById = (id) => {
     })
 }
 
-export { fakeApiGetUser, fakeApiGetUsers, fakeApiGetProductsBySearch, fakeApiGetProductByIdOnSearch, fakeApiGetEntraces, fakeApiGetEntraceById }
+const fakeExits = [
+    { id: '12345', datetime: '10/08/2025 05:00 p. m.', exitType: 'TRANSFERENCIA', amount: '0.00' },
+    { id: '12346', datetime: '11/08/2025 10:34 a. m', exitType: 'VENTA', amount: '4,200.00' },
+    { id: '12347', datetime: '11/08/2025 12:10 p. m', exitType: 'VENTA', amount: '2,800.45' },
+]
+
+
+const fakeBuyers = [
+    { buyerId: '1', name: 'Alexis Santana' },
+    { buyerId: '2', name: 'Gerardo Suarez' },
+    { buyerId: '3', name: 'Brian Olvera' }
+]
+
+const fakeLocationDestinies = [
+    { locationId: '1', name: 'Apodaca, N.L' },
+    { locationId: '2', name: 'Santa Catarina, N.L' },
+    { locationId: '3', name: 'Cienega, N.L' }
+]
+
+const fakeApiGetExits = () => {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            resolve({
+                exits: fakeExits,
+                locationDestinies: fakeLocationDestinies,
+                buyers: fakeBuyers
+            })
+        }, 500)
+    })
+}
+
+const fakeExitById = [
+    {
+        id: '12345',
+        datetime: '2025-08-10T17:00',
+        exitType: 'TRANSFERENCIA',
+        destinyLocationId: '1',
+        buyerId: null,
+        invoiceAmount: '0.0',
+        note: 'Carga Santa Norte con Santa Sur',
+        items: [
+            { productId: '5012345678900', name: 'Ventiler Nat QA', quantity: 3 },
+        ]
+    },
+    {
+        id: '12346',
+        datetime: '2025-08-11T10:34',
+        exitType: 'VENTA',
+        destinyLocationId: null,
+        buyerId: '2',
+        invoiceAmount: '4,200.00',
+        note: 'Compra directa',
+        items: [
+            { productId: '4006381333931', name: 'Neo Camilla v3', quantity: 2 },
+            { productId: '7501031311305', name: 'OxyFlow 5L Oxygen XML', quantity: 9 },
+            { productId: '8901234567893', name: 'Drager Oxylog 300', quantity: 4 }
+        ]
+    },
+    {
+        id: '12347',
+        datetime: '2025-08-11T12:10',
+        exitType: 'VENTA',
+        destinyLocationId: null,
+        buyerId: '3',
+        invoiceAmount: '2,800.45',
+        note: 'Compra trimestral',
+        items: [
+            { productId: '8412345678902', name: 'RadowLife 1', quantity: 8 },
+            { productId: '9780201379624', name: 'ThermaBath 100', quantity: 6 },
+            { productId: '4006381333931', name: 'Neo Camilla v3', quantity: 2 },
+            { productId: '8801234567896', name: 'MicroScope Pro', quantity: 1 }
+        ]
+    }
+]
+
+const fakeApiGetExitById = (id) => {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            const exit = fakeExitById.find(i => i.id === String(id))
+            if (exit) {
+                resolve(exit)
+            } else {
+                reject(new Error("Salida no registrada"))
+            }
+        }, 500)
+    })
+}
+
+export { fakeApiGetUser, fakeApiGetUsers, fakeApiGetProductsBySearch, fakeApiGetProductByIdOnSearch, fakeApiGetEntraces, fakeApiGetEntraceById, fakeApiGetExits, fakeApiGetExitById }
