@@ -68,6 +68,8 @@ export default {
         let chunks = [];
         let audioCtx;
         let canvasCtx;
+        let frameCount = 0;
+        const MIN_VOLUME = 0.03; // valores de 0 a 1
 
         const formatTime = (s) => {
             const m = Math.floor(s / 60).toString().padStart(2, "0");
@@ -116,10 +118,13 @@ export default {
 
             source.connect(analyser);
 
+
             const draw = () => {
                 const WIDTH = canvas.value.width;
                 const HEIGHT = canvas.value.height;
                 requestAnimationFrame(draw);
+                frameCount++;
+                if (frameCount % 3 !== 0) return; // dibuja cada 3 frames → más lento
                 analyser.getByteTimeDomainData(dataArray);
 
                 canvasCtx.fillStyle = backgroundColor.value;
@@ -127,13 +132,15 @@ export default {
 
                 canvasCtx.lineWidth = 3;
                 canvasCtx.strokeStyle = isRecording.value ? lineColor.value : backgroundColor.value;
-
                 canvasCtx.beginPath();
                 let sliceWidth = (WIDTH * 1.0) / bufferLength;
                 let x = 0;
                 for (let i = 0; i < bufferLength; i++) {
                     let v = dataArray[i] / 128.0;
-                    let y = (v * HEIGHT) / 2;
+                    v = v - 1; // centramos en 0 → -1 a 1
+                    // Ignorar sonidos muy bajos
+                    if (Math.abs(v) < MIN_VOLUME) v = 0;
+                    let y = (v * HEIGHT) / 2 + HEIGHT / 2;
                     if (i === 0) {
                         canvasCtx.moveTo(x, y);
                     } else {
