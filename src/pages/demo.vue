@@ -46,19 +46,6 @@
             </card-dialog>
         </div>
     </v-container>
-    <div>
-        <!-- Clips guardados -->
-        <v-container class="mt-6">
-            <v-row v-for="(clip, i) in clips" :key="i" align="center">
-                <v-col cols="12" md="6">
-                    <audio :src="clip.url" controls class="w-100"></audio>
-                </v-col>
-                <v-col cols="12" md="3" class="text-right">
-                    <v-btn icon="mdi-delete" color="error" @click="deleteClip(i)"></v-btn>
-                </v-col>
-            </v-row>
-        </v-container>
-    </div>
 </template>
 
 <script>
