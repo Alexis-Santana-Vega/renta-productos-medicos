@@ -132,6 +132,11 @@ export default {
 
                 canvasCtx.lineWidth = 3;
                 canvasCtx.strokeStyle = isRecording.value ? lineColor.value : backgroundColor.value;
+                canvasCtx.lineJoin = "round";
+                canvasCtx.lineCap = "round";
+
+                let prevY = HEIGHT / 2; // para suavizado
+
                 canvasCtx.beginPath();
                 let sliceWidth = (WIDTH * 1.0) / bufferLength;
                 let x = 0;
@@ -141,6 +146,9 @@ export default {
                     // Ignorar sonidos muy bajos
                     if (Math.abs(v) < MIN_VOLUME) v = 0;
                     let y = (v * HEIGHT) / 2 + HEIGHT / 2;
+                    // Suavizado tipo promedio móvil
+                    y = (y + prevY * 2) / 3;
+                    prevY = y;
                     if (i === 0) {
                         canvasCtx.moveTo(x, y);
                     } else {
