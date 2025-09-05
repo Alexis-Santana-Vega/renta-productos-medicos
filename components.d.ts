@@ -9,6 +9,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AppFooter: typeof import('./src/components/AppFooter.vue')['default']
+    AudioRecorder: typeof import('./src/components/audio/audio-recorder.vue')['default']
     BtnCustom: typeof import('./src/components/buttons/btn-custom.vue')['default']
     BtnTooltip: typeof import('./src/components/buttons/btn-tooltip.vue')['default']
     CameraPicker: typeof import('./src/components/pickers/camera-picker.vue')['default']
