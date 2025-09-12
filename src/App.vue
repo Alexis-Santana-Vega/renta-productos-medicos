@@ -17,7 +17,7 @@
         <v-list-item>
           <template v-slot:prepend>
             <v-img
-              src="https://static.vecteezy.com/system/resources/previews/053/066/817/non_2x/icon-free-logo-javascript-free-png.png"
+              src="@/assets/re-logo.webp"
               height="48" width="48" class="ml-n4 mr-4 mt-n1 rounded-circle" cover />
           </template>
           <v-list-item-title class="text-h6 font-weight-black">Renta Equipo</v-list-item-title>
@@ -138,7 +138,7 @@
 import { computed, getCurrentInstance, ref } from 'vue'
 import { reactive, watch } from 'vue'
 import { useDisplay, useTheme } from 'vuetify'
-
+import reLogo from '@/assets/re-logo.webp'
 
 export default {
   setup() {

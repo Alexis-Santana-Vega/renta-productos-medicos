@@ -34,7 +34,7 @@
                             <v-row dense class="d-flex justify-center">
                                 <v-avatar rounded="circle" size="90">
                                     <v-img
-                                        src="https://static.vecteezy.com/system/resources/previews/053/066/817/non_2x/icon-free-logo-javascript-free-png.png" />
+                                        src="@/assets/re-logo.webp" />
                                 </v-avatar>
                             </v-row>
                             <v-window v-model="controls.step" class="h-100">
