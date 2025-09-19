@@ -43,6 +43,8 @@ export default defineConfig({
         name: 'Renta Equipo',
         short_name: 'RE',
         description: 'Renta de Equipo Médico',
+        theme_color: '#1E3A8A',
+        background_color: '#ffffff',
         display: 'standalone',
         start_url: '/',
         icons: [
