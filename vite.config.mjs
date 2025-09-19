@@ -4,6 +4,7 @@ import Vue from '@vitejs/plugin-vue'
 import Vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
 import Fonts from 'unplugin-fonts/vite'
 import VueRouter from 'unplugin-vue-router/vite'
+import { VitePWA } from 'vite-plugin-pwa'
 
 // Utilities
 import { defineConfig } from 'vite'
@@ -35,6 +36,34 @@ export default defineConfig({
         ],
       },
     }),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.svg', 'favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
+      manifest: {
+        name: 'Renta Equipo',
+        short_name: 'RE',
+        description: 'Renta de Equipo Médico',
+        display: 'standalone',
+        start_url: '/',
+        icons: [
+          {
+            src: 'favicon-192x192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: 'favicon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          },
+          {
+            src: 'apple-touch-icon.png',
+            sizes: '180x180',
+            type: 'image/png'
+          }
+        ]
+      }
+    })
   ],
   optimizeDeps: {
     exclude: [
